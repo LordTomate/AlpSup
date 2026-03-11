@@ -24,40 +24,47 @@ This repository contains an automated setup script (`alpine-setup.sh`) to quickl
 
 Follow these steps to download and run the setup script on a completely fresh Alpine target:
 
-### 1. Download the Setup Script
+### 1. Download the Setup Scripts
 
-Log into your fresh Alpine installation. Since you only have a base command line, you can download the script directly using `wget` (which is included in Alpine by default).
+Log into your fresh Alpine installation. Since you only have a base command line, you can download the scripts directly using `wget` (which is included in Alpine by default).
 
-Run the following command to download the script from GitHub:
+Run the following commands to download both the core setup and the master IDE installer from GitHub:
 
 ```sh
 wget -O alpine-setup.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-setup.sh
+wget -O alpine-install-ide.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-install-ide.sh
 ```
 
-*(Alternatively, if you are transferring the file manually over SSH, you can copy it from your host machine):*
+*(Alternatively, if you are transferring the files manually over SSH, you can copy them from your host machine):*
 ```sh
 # Run this from your local machine while SSH is enabled on Alpine
-scp alpine-setup.sh root@<alpine-ip-address>:/root/
+scp alpine-setup.sh alpine-install-ide.sh root@<alpine-ip-address>:/root/
 ```
 
-### 2. Make the Script Executable
+### 2. Make the Scripts Executable
 
-Navigate to the directory where the script is located and grant execution permissions:
+Navigate to the directory where the scripts are located and grant execution permissions:
 
 ```sh
-# Assuming the file is in your current directory
-chmod +x alpine-setup.sh
+# Assuming the files are in your current directory
+chmod +x alpine-setup.sh alpine-install-ide.sh
 ```
 
-### 3. Run the Script
+### 3. Run the Master IDE Script
 
-The script must be executed with root privileges to install packages and configure system services.
+Instead of running just the base setup, run the **Master IDE Installer** script with root privileges. This script will automatically trigger the base `alpine-setup.sh` and then ask you which heavy IDEs you want to install.
 
 Run it using:
 ```sh
-./alpine-setup.sh
+./alpine-install-ide.sh
 ```
-*(If you are logged as a normal user and have sudo configured, run `sudo ./alpine-setup.sh`)*
+*(If you are logged as a normal user and have sudo configured, run `sudo ./alpine-install-ide.sh`)*
+
+The script will prompt you to:
+1. Optionally wipe existing configurations.
+2. Provide your keyboard layout.
+3. Choose whether to install **Zed Editor** and **Code OSS** (VS Code Open Source).
+4. Optionally self-destruct the setup scripts.
 
 ### 4. Observe the Output
 
