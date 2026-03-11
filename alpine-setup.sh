@@ -13,6 +13,30 @@ NC='\033[0m'
 
 echo -e "${GREEN}Starting Alpine Linux Setup...${NC}\n"
 
+# --- 0. Pre-Setup Options ---
+echo -e "${YELLOW}--- Clean Setup Option ---${NC}"
+echo -e "Do you want to WIPE existing configurations for the tools in this stack?"
+echo -e "(This deletes existing sway, foot, ranger, nvim, zathura, cmus, and profile configs for a fresh start.)"
+read -p "$(echo -e ${BLUE}"Wipe configurations? [y/N]: "${NC})" WIPE_CONFIGS
+WIPE_CONFIGS=${WIPE_CONFIGS:-N}
+
+echo -e "${YELLOW}--- Self-Destruct Option ---${NC}"
+read -p "$(echo -e ${BLUE}"Delete this setup script automatically after a successful run? [y/N]: "${NC})" DELETE_SCRIPT
+DELETE_SCRIPT=${DELETE_SCRIPT:-N}
+echo -e ""
+
+if [[ "$WIPE_CONFIGS" =~ ^[Yy]$ ]]; then
+    echo -e "${BLUE}[*] Executing:${NC} Wiping old configurations..."
+    for d in /root /home/*; do
+        if [ -d "$d" ]; then
+            rm -rf "$d/.config/sway" "$d/.config/foot" "$d/.config/ranger" "$d/.config/nvim" "$d/.config/zathura" "$d/.config/cmus" "$d/.profile"
+        fi
+    done
+    rm -f /etc/nftables.nft /etc/sway/config
+    rm -rf /usr/lib/librewolf/distribution
+    echo -e "${GREEN}[+] Success:${NC} Wiped existing configurations.\n"
+fi
+
 # --- 0. Keyboard Configuration (Auto-Detect) ---
 echo -e "${YELLOW}--- Auto-Detecting Keyboard Layout ---${NC}"
 # Extract layout and variant from Alpine's loadkmap config (set during setup-alpine)
@@ -229,4 +253,10 @@ echo -e "${GREEN}[SUCCESS] Alpine Setup Completed!${NC}"
 echo -e "\n${YELLOW}IMPORTANT USAGE NOTES:${NC}"
 echo -e "1. ${BLUE}Start the GUI:${NC} Log in to tty1 as your regular user. Sway will automatically start."
 echo -e "   (Sway is exactly like i3wm but designed for Wayland, supporting your 'foot' terminal natively)."
-echo -e "2. ${BLUE}File Locations:${NC} Your setup script is saved at: /Users/matteo.frenzel/code/alpine_setup/alpine-setup.sh"
+
+if [[ "$DELETE_SCRIPT" =~ ^[Yy]$ ]]; then
+    echo -e "2. ${BLUE}Cleanup:${NC} The setup script has been deleted."
+    rm -f "$0"
+else
+    echo -e "2. ${BLUE}File Locations:${NC} Your setup script is saved at: $(realpath "$0")"
+fi
