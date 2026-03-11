@@ -31,10 +31,10 @@ Follow these steps to download and run the setup script on a completely fresh Al
 
 Log into your fresh Alpine installation. Since you only have a base command line, you can download the script directly using `wget` (which is included in Alpine by default).
 
-First, ensure this script is hosted somewhere accessible (like a GitHub Gist, a raw file link, or a local HTTP server). Then run:
+Run the following command to download the script from GitHub:
 
 ```sh
-wget -O alpine-setup.sh https://link-to-your-hosted-script.sh
+wget -O alpine-setup.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-setup.sh
 ```
 
 *(Alternatively, if you are transferring the file manually over SSH, you can copy it from your host machine):*
