@@ -13,6 +13,28 @@ NC='\033[0m'
 
 echo -e "${GREEN}Starting Alpine Linux Setup...${NC}\n"
 
+# --- 0. Keyboard Configuration (Auto-Detect) ---
+echo -e "${YELLOW}--- Auto-Detecting Keyboard Layout ---${NC}"
+# Extract layout and variant from Alpine's loadkmap config (set during setup-alpine)
+if [ -f /etc/conf.d/loadkmap ]; then
+    # Parse KEYMAP string like "de-mac", "us", "de"
+    BKEYMAP=$(grep "^KEYMAP=" /etc/conf.d/loadkmap | cut -d'=' -f2 | tr -d '"'\')
+    KB_LAYOUT=$(echo $BKEYMAP | cut -d'-' -f1)
+    # Check if there's a variant (like -mac)
+    if [[ "$BKEYMAP" == *"-"* ]]; then
+        KB_VARIANT=$(echo $BKEYMAP | cut -d'-' -f2)
+    else
+        KB_VARIANT=""
+    fi
+    echo -e "${GREEN}[+] Detected Keyboard Layout:${NC} $KB_LAYOUT"
+    [ -n "$KB_VARIANT" ] && echo -e "${GREEN}[+] Detected Variant:${NC} $KB_VARIANT"
+else
+    echo -e "${YELLOW}[!] Warning:${NC} Could not find /etc/conf.d/loadkmap. Falling back to 'us'."
+    KB_LAYOUT="us"
+    KB_VARIANT=""
+fi
+echo -e ""
+
 # --- Helper Function for Error Handling & Fixes ---
 run_step() {
     local step_name="$1"
@@ -160,6 +182,24 @@ setup_login() {
     
     for dir in "${user_dirs[@]}"; do
         if [ -w "$dir" ]; then
+            # 1. Setup Sway keyboard layout
+            mkdir -p "$dir/.config/sway"
+            if [ -f /etc/sway/config ]; then
+                cp /etc/sway/config "$dir/.config/sway/config"
+            else
+                echo "include /etc/sway/config" > "$dir/.config/sway/config"
+            fi
+            
+            cat << EOF >> "$dir/.config/sway/config"
+
+# --- Added by Alpine Setup Script ---
+input * {
+    xkb_layout "$KB_LAYOUT"
+    xkb_variant "$KB_VARIANT"
+}
+EOF
+
+            # 2. Auto-start sway on login on tty1
             cat << 'EOF' > "$dir/.profile"
 if [ -z "${DISPLAY}" ] && [ -n "${XDG_VTNR}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
   exec sway
@@ -168,6 +208,7 @@ EOF
             if [[ "$dir" == /home/* ]]; then
                 # Get the username from the directory path
                 local uname=$(basename "$dir")
+                chown -R "$uname:$uname" "$dir/.config"
                 chown "$uname:$uname" "$dir/.profile"
                 # Add user to seat group (required for wayland/sway)
                 adduser "$uname" seat || true
