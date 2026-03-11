@@ -14,10 +14,10 @@ NC='\033[0m'
 echo -e "${GREEN}Starting Alpine Linux Setup...${NC}\n"
 
 # --- 0. Pre-Setup Options ---
-echo -e "${YELLOW}--- Clean Setup Option ---${NC}"
-echo -e "Do you want to WIPE existing configurations for the tools in this stack?"
-echo -e "(This deletes existing sway, foot, ranger, nvim, zathura, cmus, and profile configs for a fresh start.)"
-read -p "$(echo -e ${BLUE}"Wipe configurations? [y/N]: "${NC})" WIPE_CONFIGS
+echo -e "${YELLOW}--- Deep Clean Option ---${NC}"
+echo -e "Do you want to perform a DEEP WIPE of existing applications before installing?"
+echo -e "(This uninstalls sway, foot, ranger, nvim, zathura, cmus, nftables, dnscrypt-proxy, librewolf, etc., AND deletes their configurations for a true clean slate.)"
+read -p "$(echo -e ${BLUE}"Wipe system clean? [y/N]: "${NC})" WIPE_CONFIGS
 WIPE_CONFIGS=${WIPE_CONFIGS:-N}
 
 echo -e "${YELLOW}--- Self-Destruct Option ---${NC}"
@@ -26,7 +26,15 @@ DELETE_SCRIPT=${DELETE_SCRIPT:-N}
 echo -e ""
 
 if [[ "$WIPE_CONFIGS" =~ ^[Yy]$ ]]; then
-    echo -e "${BLUE}[*] Executing:${NC} Wiping old configurations..."
+    echo -e "${BLUE}[*] Executing:${NC} Deep Wiping old applications and configurations..."
+    
+    # 1. Uninstall the software stack if it exists
+    apk del --purge \
+        sway swaybg xwayland wl-clipboard foot dmenu ranger \
+        librewolf neovim zathura zathura-pdf-mupdf cmus nftables \
+        dnscrypt-proxy eudev dbus seatd font-dejavu 2>/dev/null || true
+        
+    # 2. Delete configuration folders
     for d in /root /home/*; do
         if [ -d "$d" ]; then
             rm -rf "$d/.config/sway" "$d/.config/foot" "$d/.config/ranger" "$d/.config/nvim" "$d/.config/zathura" "$d/.config/cmus" "$d/.profile"
@@ -34,7 +42,7 @@ if [[ "$WIPE_CONFIGS" =~ ^[Yy]$ ]]; then
     done
     rm -f /etc/nftables.nft /etc/sway/config
     rm -rf /usr/lib/librewolf/distribution
-    echo -e "${GREEN}[+] Success:${NC} Wiped existing configurations.\n"
+    echo -e "${GREEN}[+] Success:${NC} System deeply wiped.\n"
 fi
 
 # --- 0. Keyboard Configuration (Auto-Detect) ---

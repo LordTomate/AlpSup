@@ -28,10 +28,15 @@ Follow these steps to download and run the setup script on a completely fresh Al
 
 Log into your fresh Alpine installation. Since you only have a base command line, you can download the scripts directly using `wget` (which is included in Alpine by default).
 
-Run the following commands to download both the core setup and the master IDE installer from GitHub:
+Run the following commands to download both scripts from GitHub:
 
+**1. Download the basic setup script:**
 ```sh
 wget -O alpine-setup.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-setup.sh
+```
+
+**2. Download the IDE Master Installer** (which runs the basic setup automatically):
+```sh
 wget -O alpine-install-ide.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-install-ide.sh
 ```
 
