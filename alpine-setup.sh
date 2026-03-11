@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Alpine Linux Setup Script
-# Stack: i3wm, foot, dmenu, ranger, LibreWolf+Tridactyl, neovim, zathura, cmus, nftables, dnscrypt-proxy, startx
+# Stack: sway, foot, dmenu, ranger, LibreWolf+Tridactyl, neovim, zathura, cmus, nftables, dnscrypt-proxy
 
 set -e
 
@@ -57,14 +57,12 @@ run_step "Enable Community and Testing repositories" "enable_repos" "Ensure your
 run_step "Update package index" "apk update" "Check your network connection and DNS settings."
 run_step "Upgrade existing packages" "apk upgrade" "Check your network connection and ensure no other apk process is running."
 
-# --- 4. Install Xorg, Window Manager, and Base ---
-run_step "Install Xorg Server and dependencies" "apk add xorg-server xinit xf86-video-modesetting eudev dbus" "Check if the repositories are accessible. This requires standard Alpine repos."
-run_step "Install Window Manager (i3wm, i3status)" "apk add i3wm i3status setxkbmap font-dejavu" "Ensure community repositories are enabled."
+# --- 4. Install Wayland, Window Manager, and Base ---
+run_step "Install core services (udev, dbus, seatd)" "apk add eudev dbus seatd font-dejavu" "Ensure the main repositories are accessible."
+run_step "Install Window Manager (sway, swaybg, xwayland)" "apk add sway swaybg xwayland wl-clipboard" "Ensure community repositories are enabled."
 
 # --- 5. Install Terminal ---
-# WARNING: 'foot' is Wayland-native and WILL NOT work natively in i3wm (X11).
-# We install it because the user explicitly requested it, but we provide a visible waning.
-run_step "Install Terminal (foot)" "apk add foot" "Foot requires the community repository. NOTE: Foot is a Wayland terminal and may NOT work in i3wm without an XWayland wrapper or switching to Sway (Wayland version of i3)."
+run_step "Install Terminal (foot)" "apk add foot" "Foot requires the community repository."
 
 # --- 6. Install App Launcher ---
 run_step "Install App Launcher (dmenu)" "apk add dmenu" "dmenu requires the community repository."
@@ -150,9 +148,9 @@ setup_dns() {
 }
 run_step "Configure and enable dnscrypt-proxy" "setup_dns" "Ensure file /etc/resolv.conf is modifiable and won't be immediately overwritten by networkmanager/dhcpcd."
 
-# --- 14. Configure Login (startx, .xinitrc) ---
-setup_xinitrc() {
-    # Provide a default .xinitrc for root, and normal user.
+# --- 14. Configure Login (.profile) ---
+setup_login() {
+    # Auto-start sway on login on tty1
     local user_dirs=("/root")
     for d in /home/*; do
         if [ -d "$d" ]; then
@@ -162,27 +160,32 @@ setup_xinitrc() {
     
     for dir in "${user_dirs[@]}"; do
         if [ -w "$dir" ]; then
-            echo "exec i3" > "$dir/.xinitrc"
+            cat << 'EOF' > "$dir/.profile"
+if [ -z "${DISPLAY}" ] && [ -n "${XDG_VTNR}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
+  exec sway
+fi
+EOF
             if [[ "$dir" == /home/* ]]; then
                 # Get the username from the directory path
                 local uname=$(basename "$dir")
-                chown "$uname:$uname" "$dir/.xinitrc"
+                chown "$uname:$uname" "$dir/.profile"
+                # Add user to seat group (required for wayland/sway)
+                adduser "$uname" seat || true
+                adduser "$uname" video || true
             fi
         fi
     done
+    adduser root seat || true
 }
-run_step "Setup .xinitrc for all users" "setup_xinitrc" "Ensure user home directories are accessible and writable."
+run_step "Setup auto-start on tty1 for all users and seat access" "setup_login" "Ensure user home directories are accessible and writable."
 
-# Ensure eudev and dbus services are added to startup (required for X11 on init systems)
-run_step "Add hardware management services to startup" "rc-update add udev sysinit && rc-update add udev-trigger sysinit && rc-update add udev-settle sysinit && rc-update add udev-postmount default && rc-update add dbus default" "Ensure openrc and eudev are installed correctly."
+# Ensure eudev, dbus, and seatd services are added to startup (required for Wayland on init systems)
+run_step "Add hardware management services to startup" "rc-update add udev sysinit && rc-update add udev-trigger sysinit && rc-update add udev-settle sysinit && rc-update add udev-postmount default && rc-update add dbus default && rc-update add seatd default" "Ensure openrc, eudev, dbus, and seatd are installed correctly."
 
 # --- Finish ---
 echo -e "------------------------------------------------"
 echo -e "${GREEN}[SUCCESS] Alpine Setup Completed!${NC}"
 echo -e "\n${YELLOW}IMPORTANT USAGE NOTES:${NC}"
-echo -e "1. ${BLUE}Terminal Warning:${NC} You requested 'foot' as the terminal and 'i3wm' as the WM."
-echo -e "   'foot' is designed for Wayland and usually ${RED}fails to start in an X11 environment${NC} (like i3wm)."
-echo -e "   If foot does not run when you press your terminal shortcut, consider installing 'alacritty' or 'kitty'."
-echo -e "   Alternatively, switch your window manager to 'sway' (Wayland port of i3)."
-echo -e "2. ${BLUE}Start the GUI:${NC} Log in as your regular user and type \`startx\`."
-echo -e "3. ${BLUE}File Locations:${NC} Your setup script is saved at: /Users/matteo.frenzel/code/alpine_setup/alpine-setup.sh"
+echo -e "1. ${BLUE}Start the GUI:${NC} Log in to tty1 as your regular user. Sway will automatically start."
+echo -e "   (Sway is exactly like i3wm but designed for Wayland, supporting your 'foot' terminal natively)."
+echo -e "2. ${BLUE}File Locations:${NC} Your setup script is saved at: /Users/matteo.frenzel/code/alpine_setup/alpine-setup.sh"

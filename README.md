@@ -4,18 +4,15 @@ This repository contains an automated setup script (`alpine-setup.sh`) to quickl
 
 ## Included Stack
 
-- **Window Manager:** i3wm (X11)
-- **Terminal:** foot (Wayland-native)*, dmenu (App Launcher)
+- **Window Manager:** sway (Wayland proxy for i3wm)
+- **Terminal:** foot (Wayland-native), dmenu (App Launcher)
 - **File Manager:** ranger
 - **Browser:** LibreWolf (with Tridactyl extension force-installed)
 - **Editor:** neovim
 - **PDF Viewer:** zathura
 - **Media:** cmus
 - **System Services:** nftables (Firewall), dnscrypt-proxy (DNS proxy)
-- **Login:** startx (No Display Manager)
-
-> **Important Note regarding `foot` & `i3wm`:**
-> You requested both `foot` (a highly specialized Wayland terminal emulator) and `i3wm` (an X11 window manager). `foot` does not natively run under X11. If you attempt to open a terminal and nothing happens, log out/switch to a virtual terminal (TTY) and install an X11-compatible terminal like `alacritty` or `kitty`. Alternatively, transition your desktop environment to `sway`, which is the Wayland equivalent of `i3wm`.
+- **Login:** tty1 auto-start (No Display Manager)
 
 ## Prerequisites
 
@@ -73,9 +70,5 @@ The script executes step-by-step. If any step fails:
 ### 5. Finalize the Setup
 
 Once the script completes successfully:
-1. Log in with your standard (non-root) user account.
-2. Start the graphical environment by typing:
-   ```sh
-   startx
-   ```
-3. Your i3 window manager should launch immediately.
+1. Log in to `tty1` with your standard (non-root) user account.
+2. Your sway window manager (and foot terminal) will automatically start immediately on successful login.
