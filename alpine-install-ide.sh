@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Master IDE Installer Script for Alpine Linux
 # Wraps alpine-setup.sh and provides optional IDE installations.
 
@@ -83,7 +83,7 @@ install_ide() {
 }
 
 echo -e "------------------------------------------------"
-if [[ "$INSTALL_ZED" =~ ^[Yy]$ ]]; then
+if [ "$INSTALL_ZED" = "y" ] || [ "$INSTALL_ZED" = "Y" ]; then
     # Enable edge testing repo specifically for zed if not already there
     if ! grep -q "edge/testing" /etc/apk/repositories; then
         echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
@@ -92,7 +92,7 @@ if [[ "$INSTALL_ZED" =~ ^[Yy]$ ]]; then
     install_ide "Zed Editor" "apk update && apk add zed gcompat"
 fi
 
-if [[ "$INSTALL_CODEOSS" =~ ^[Yy]$ ]]; then
+if [ "$INSTALL_CODEOSS" = "y" ] || [ "$INSTALL_CODEOSS" = "Y" ]; then
     # Install code-oss from testing
     install_ide "Code OSS" "apk update && apk add code-oss"
 fi
