@@ -35,60 +35,30 @@ echo -e "${GREEN}--- Additional IDE Installations ---${NC}"
 echo -e "Your base environment is ready. You can now optionally install heavily integrated development environments."
 echo -e "Note: These packages require testing/edge repositories and may introduce glibc compatibility layers.\n"
 
-# Prompt for Zed
-echo -e "${YELLOW}1. Zed Editor${NC} (High-performance, multiplayer code editor)"
-echo -e "   Requires the 'edge' repository and 'gcompat' (glibc compatibility layer)."
-read -p "$(echo -e ${BLUE}"Install Zed? [y/N]: "${NC})" INSTALL_ZED
-INSTALL_ZED=${INSTALL_ZED:-N}
+echo -e "${YELLOW}-- Select Additional Tools & IDEs --${NC}"
+echo -e "  [1] Zed Editor (Requires 'edge' repo, gcompat)"
+echo -e "  [2] Code OSS (Official open-source VS Code)"
+echo -e "  [3] Clipboard Manager (cliphist)"
+echo -e "  [4] Screenshot Tools (grim & slurp)"
+echo -e "  [5] Hardware Controls (brightnessctl & alsa-utils)"
+echo -e "  [6] Notification Daemon (mako)"
+echo -e "  [7] Modern Status Bar (waybar)"
+echo -e "  [8] Screen Locker (swayidle & swaylock)"
 
-# Prompt for Code OSS
-echo -e "\n${YELLOW}2. Code OSS${NC} (Visual Studio Code Open Source)"
-echo -e "   The official open-source build provided in Alpine's 'testing' repository."
-read -p "$(echo -e ${BLUE}"Install Code OSS? [y/N]: "${NC})" INSTALL_CODEOSS
-INSTALL_CODEOSS=${INSTALL_CODEOSS:-N}
+echo -e "\n${RED}Note on Antigravity IDE:${NC} It requires a true glibc environment and cannot run natively here."
 
-# Prompt for Cliphist
-echo -e "\n${YELLOW}3. Clipboard Manager (cliphist & wl-clipboard)${NC}"
-echo -e "   Stores last 50 copied items. Bind Mod+c to list and paste."
-read -p "$(echo -e ${BLUE}"Install Cliphist? [y/N]: "${NC})" INSTALL_CLIPHIST
-INSTALL_CLIPHIST=${INSTALL_CLIPHIST:-N}
+echo -e ""
+read -p "$(echo -e ${BLUE}"Enter numbers separated by space or comma (e.g., 1,3,4,8) - or press Enter to skip: "${NC})" USER_CHOICES
 
-# Prompt for Screenshots
-echo -e "\n${YELLOW}4. Screenshot Tools (grim & slurp)${NC}"
-echo -e "   Bind Mod+Shift+s to freeze screen, select area, and copy to clipboard."
-read -p "$(echo -e ${BLUE}"Install Screenshot Tools? [y/N]: "${NC})" INSTALL_SCREENSHOTS
-INSTALL_SCREENSHOTS=${INSTALL_SCREENSHOTS:-N}
-
-# Prompt for Hardware Keys
-echo -e "\n${YELLOW}5. Hardware Controls (brightnessctl & alsa-utils)${NC}"
-echo -e "   Enables physical volume and brightness keys on your keyboard."
-read -p "$(echo -e ${BLUE}"Install Hardware Controls? [y/N]: "${NC})" INSTALL_HWKEYS
-INSTALL_HWKEYS=${INSTALL_HWKEYS:-N}
-
-# Prompt for Mako
-echo -e "\n${YELLOW}6. Notification Daemon (mako)${NC}"
-echo -e "   Hover notifications for system events (bind Mod+Space to dismiss)."
-read -p "$(echo -e ${BLUE}"Install Mako? [y/N]: "${NC})" INSTALL_MAKO
-INSTALL_MAKO=${INSTALL_MAKO:-N}
-
-# Prompt for Waybar
-echo -e "\n${YELLOW}7. Modern Status Bar (waybar)${NC}"
-echo -e "   Replaces the default swaybar with the highly customizable Waybar."
-read -p "$(echo -e ${BLUE}"Install Waybar? [y/N]: "${NC})" INSTALL_WAYBAR
-INSTALL_WAYBAR=${INSTALL_WAYBAR:-N}
-
-# Prompt for Swaylock
-echo -e "\n${YELLOW}8. Screen Locker (swayidle & swaylock)${NC}"
-echo -e "   Auto-locks screen after 5 minutes of inactivity."
-read -p "$(echo -e ${BLUE}"Install Screen Locker? [y/N]: "${NC})" INSTALL_LOCKER
-INSTALL_LOCKER=${INSTALL_LOCKER:-N}
-
-
-# Note regarding Antigravity
-echo -e "\n${RED}--- Note on Antigravity IDE ---${NC}"
-echo -e "You requested Antigravity IDE. Antigravity strictly requires a true 'glibc' environment (like Debian or Fedora)."
-echo -e "Because Alpine uses 'musl libc', Antigravity cannot be installed natively here without heavy containerization (like Distrobox or Docker)."
-echo -e "We recommend using Neovim, Zed, or Code OSS natively instead.\n"
+case "$USER_CHOICES" in *1*) INSTALL_ZED=y ;; *) INSTALL_ZED=N ;; esac
+case "$USER_CHOICES" in *2*) INSTALL_CODEOSS=y ;; *) INSTALL_CODEOSS=N ;; esac
+case "$USER_CHOICES" in *3*) INSTALL_CLIPHIST=y ;; *) INSTALL_CLIPHIST=N ;; esac
+case "$USER_CHOICES" in *4*) INSTALL_SCREENSHOTS=y ;; *) INSTALL_SCREENSHOTS=N ;; esac
+case "$USER_CHOICES" in *5*) INSTALL_HWKEYS=y ;; *) INSTALL_HWKEYS=N ;; esac
+case "$USER_CHOICES" in *6*) INSTALL_MAKO=y ;; *) INSTALL_MAKO=N ;; esac
+case "$USER_CHOICES" in *7*) INSTALL_WAYBAR=y ;; *) INSTALL_WAYBAR=N ;; esac
+case "$USER_CHOICES" in *8*) INSTALL_LOCKER=y ;; *) INSTALL_LOCKER=N ;; esac
+echo -e ""
 
 # --- 3. Execute Installations ---
 install_ide() {
