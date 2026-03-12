@@ -216,32 +216,37 @@ fi
 
 if [ "$INSTALL_DISTROBOX" = "y" ] || [ "$INSTALL_DISTROBOX" = "Y" ]; then
     echo -e "${BLUE}[*] Setting up Glibc Compatibility Layer (Podman + Distrobox)...${NC}"
-    # podman requires cgroups v2
     install_ide "Glibc Compatibility Layer" "apk add podman distrobox && rc-update add cgroups boot && rc-service cgroups start"
     verify_app "podman" "Podman" "Required for Distrobox containers"
     verify_app "distrobox" "Distrobox" "Used to run Ubuntu/Debian apps (see instructions below)"
-    
+
     # Enable rootless podman for the users
     for d in /root /home/*; do
         if [ -d "$d" ]; then
             uname=$(basename "$d")
-            # Setup subuid/subgid
             if ! grep -q "$uname" /etc/subuid 2>/dev/null; then
                 echo "$uname:100000:65536" >> /etc/subuid
                 echo "$uname:100000:65536" >> /etc/subgid
             fi
         fi
     done
-    echo -e "${GREEN}[+] Distrobox & Podman installed successfully.${NC}"
+
+    # --- Download and execute the dedicated Distrobox app installer ---
+    echo -e "\n${CYAN}--- Glibc App Installer (VS Code / Antigravity) ---${NC}"
+    if [ ! -f "./alpine-distrobox-apps.sh" ]; then
+        echo -e "${YELLOW}>> Downloading alpine-distrobox-apps.sh from GitHub...${NC}"
+        if wget -O alpine-distrobox-apps.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/dev/alpine-distrobox-apps.sh; then
+            chmod +x alpine-distrobox-apps.sh
+            echo -e "${GREEN}[+] Downloaded successfully.${NC}\n"
+        else
+            echo -e "${RED}[!] ERROR:${NC} Could not download the app installer. Check your internet connection."
+            echo -e "${YELLOW}[TIP]${NC} You can re-run it manually later: wget -O alpine-distrobox-apps.sh <URL> && sh alpine-distrobox-apps.sh"
+        fi
+    fi
+    if [ -f "./alpine-distrobox-apps.sh" ]; then
+        ./alpine-distrobox-apps.sh
+    fi
 fi
 
 echo -e "\n${GREEN}[SUCCESS] IDE Installation Phase Completed!${NC}"
 echo -e "You can now log into tty1 to start your Sway environment."
-
-if [ "$INSTALL_DISTROBOX" = "y" ] || [ "$INSTALL_DISTROBOX" = "Y" ]; then
-    echo -e "\n${YELLOW}--- Distrobox Usage for Antigravity/VS Code ---${NC}"
-    echo -e "1. Open a terminal and run: ${BLUE}distrobox create --name ubuntu --image ubuntu:latest${NC}"
-    echo -e "2. Enter the container: ${BLUE}distrobox enter ubuntu${NC}"
-    echo -e "3. Inside the container, you can install any glibc app (Antigravity, official VS Code, etc.)."
-    echo -e "4. They will automatically appear in your Sway environment!"
-fi
