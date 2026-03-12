@@ -46,8 +46,10 @@ In the following steps, we will use the Master Installer script.
 scp alpine-install-ide.sh root@<alpine-ip-address>:/root/
 ```
 
-### 2. High-Performance IDEs & Power Tools
-Run the master installer to selectively install IDEs and Wayland power tools:
+### 2. Make the Scripts Executable
+
+Navigate to the directory where the scripts are located and grant execution permissions:
+
 ```sh
 chmod +x alpine-install-ide.sh
 ./alpine-install-ide.sh
