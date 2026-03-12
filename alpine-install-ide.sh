@@ -15,15 +15,20 @@ echo -e "${GREEN}Starting Master IDE Installer for Alpine Linux...${NC}\n"
 
 # --- 1. Base Setup ---
 echo -e "${BLUE}[*] Checking for base setup script (alpine-setup.sh)...${NC}"
-if [ -f "./alpine-setup.sh" ]; then
-    echo -e "${YELLOW}>> Triggering base setup...${NC}"
-    ./alpine-setup.sh
-    echo -e "${GREEN}[+] Base setup completed successfully.${NC}\n"
-else
-    echo -e "${RED}[!] ERROR:${NC} alpine-setup.sh not found in the current directory."
-    echo -e "${YELLOW}[?] FIX:${NC} Ensure you run this script from the same directory where alpine-setup.sh is located."
-    exit 1
+if [ ! -f "./alpine-setup.sh" ]; then
+    echo -e "${YELLOW}>> alpine-setup.sh not found locally. Downloading from GitHub...${NC}"
+    if wget -qO alpine-setup.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-setup.sh; then
+        chmod +x alpine-setup.sh
+        echo -e "${GREEN}[+] Successfully downloaded alpine-setup.sh${NC}"
+    else
+        echo -e "${RED}[!] ERROR:${NC} Failed to download alpine-setup.sh. Please check your internet connection."
+        exit 1
+    fi
 fi
+
+echo -e "${YELLOW}>> Triggering base setup...${NC}"
+./alpine-setup.sh
+echo -e "${GREEN}[+] Base setup completed successfully.${NC}\n"
 
 # --- 2. Interactive IDE Prompts ---
 echo -e "${GREEN}--- Additional IDE Installations ---${NC}"
