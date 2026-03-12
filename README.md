@@ -1,6 +1,6 @@
 # Alpine Linux Setup Environment
 
-This repository contains an automated setup script (`alpine-setup.sh`) to quickly bootstrap a fresh Alpine Linux installation with a pre-configured graphical environment and essential tools.
+This repository contains an automated setup script (`setup.sh`) to quickly bootstrap a fresh Alpine Linux installation with a pre-configured graphical environment and essential tools.
 
 ## Included Stack
 
@@ -32,18 +32,18 @@ Run one of the following commands to download the script from GitHub:
 
 **Option 1. Download the basic setup script:**
 ```sh
-wget -O alpine-setup.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/alpine-setup.sh
+wget -O setup.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/setup.sh
 ```
 
 **Option 2. Download the IDE Master Installer** (which runs the basic setup automatically):
 ```sh
-wget -O alpine-install-ide.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/alpine-install-ide.sh
+wget -O ide.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/ide.sh
 ```
 In the following steps, we will use the Master Installer script.
 *(Alternatively, if you are transferring the files manually over SSH, you can copy them from your host machine):*
 ```sh
 # Run this from your local machine while SSH is enabled on Alpine
-scp alpine-install-ide.sh root@<alpine-ip-address>:/root/
+scp ide.sh root@<alpine-ip-address>:/root/
 ```
 
 ### 2. Make the Scripts Executable
@@ -51,8 +51,8 @@ scp alpine-install-ide.sh root@<alpine-ip-address>:/root/
 Navigate to the directory where the scripts are located and grant execution permissions:
 
 ```sh
-chmod +x alpine-install-ide.sh
-./alpine-install-ide.sh
+chmod +x ide.sh
+./ide.sh
 ```
 The installer features a **multi-select menu** (Titus-style) where you can enter numbers (e.g., `1,3,4,9`) to batch-install:
 - **IDEs**: Zed, Code OSS.
@@ -69,9 +69,9 @@ If you installed the **Glibc Compatibility Layer** ([9]):
 
 Run it using:
 ```sh
-./alpine-install-ide.sh
+./ide.sh
 ```
-*(If you are logged as a normal user and have sudo configured, run `sudo ./alpine-install-ide.sh`)*
+*(If you are logged as a normal user and have sudo configured, run `sudo ./ide.sh`)*
 
 The script will present a series of prompts:
 1. Optionally wipe existing configurations.

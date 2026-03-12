@@ -1,6 +1,6 @@
 #!/bin/sh
-# Master IDE Installer Script for Alpine Linux
-# Wraps alpine-setup.sh and provides optional IDE installations.
+# Master IDE Installer for Alpine Linux  →  ide.sh
+# Auto-downloads setup.sh and dbox.sh as needed.
 
 set -e
 
@@ -14,20 +14,20 @@ NC='\033[0m'
 echo -e "${GREEN}Starting Master IDE Installer for Alpine Linux...${NC}\n"
 
 # --- 1. Base Setup ---
-echo -e "${BLUE}[*] Checking for base setup script (alpine-setup.sh)...${NC}"
-if [ ! -f "./alpine-setup.sh" ]; then
-    echo -e "${YELLOW}>> alpine-setup.sh not found locally. Downloading from GitHub...${NC}"
-    if wget -O alpine-setup.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/alpine-setup.sh; then
-        chmod +x alpine-setup.sh
-        echo -e "\n${GREEN}[+] Successfully downloaded alpine-setup.sh${NC}"
+echo -e "${BLUE}[*] Checking for base setup script (setup.sh)...${NC}"
+if [ ! -f "./setup.sh" ]; then
+    echo -e "${YELLOW}>> setup.sh not found locally. Downloading from GitHub...${NC}"
+    if wget -O setup.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/setup.sh; then
+        chmod +x setup.sh
+        echo -e "\n${GREEN}[+] Downloaded setup.sh${NC}"
     else
-        echo -e "${RED}[!] ERROR:${NC} Failed to download alpine-setup.sh. Please check your internet connection."
+        echo -e "${RED}[!] ERROR:${NC} Failed to download setup.sh. Please check your internet connection."
         exit 1
     fi
 fi
 
 echo -e "${YELLOW}>> Triggering base setup...${NC}"
-./alpine-setup.sh
+./setup.sh
 echo -e "${GREEN}[+] Base setup completed successfully.${NC}\n"
 
 # --- 2. Interactive IDE Prompts ---
@@ -233,18 +233,18 @@ if [ "$INSTALL_DISTROBOX" = "y" ] || [ "$INSTALL_DISTROBOX" = "Y" ]; then
 
     # --- Download and execute the dedicated Distrobox app installer ---
     echo -e "\n${CYAN}--- Glibc App Installer (VS Code / Antigravity) ---${NC}"
-    if [ ! -f "./alpine-distrobox-apps.sh" ]; then
-        echo -e "${YELLOW}>> Downloading alpine-distrobox-apps.sh from GitHub...${NC}"
-        if wget -O alpine-distrobox-apps.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/alpine-distrobox-apps.sh; then
-            chmod +x alpine-distrobox-apps.sh
+    if [ ! -f "./dbox.sh" ]; then
+        echo -e "${YELLOW}>> Downloading dbox.sh from GitHub...${NC}"
+        if wget -O dbox.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/dbox.sh; then
+            chmod +x dbox.sh
             echo -e "${GREEN}[+] Downloaded successfully.${NC}\n"
         else
-            echo -e "${RED}[!] ERROR:${NC} Could not download the app installer. Check your internet connection."
-            echo -e "${YELLOW}[TIP]${NC} You can re-run it manually later: wget -O alpine-distrobox-apps.sh <URL> && sh alpine-distrobox-apps.sh"
+            echo -e "${RED}[!] ERROR:${NC} Could not download dbox.sh. Check your internet connection."
+            echo -e "${YELLOW}[TIP]${NC} Re-run later: wget https://raw.githubusercontent.com/LordTomate/AlpSup/main/dbox.sh && sh dbox.sh"
         fi
     fi
-    if [ -f "./alpine-distrobox-apps.sh" ]; then
-        ./alpine-distrobox-apps.sh
+    if [ -f "./dbox.sh" ]; then
+        ./dbox.sh
     fi
 fi
 
