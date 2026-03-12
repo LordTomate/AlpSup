@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Master IDE Installer Script for Alpine Linux
 # Wraps alpine-setup.sh and provides optional IDE installations.
 
@@ -35,23 +35,32 @@ echo -e "${GREEN}--- Additional IDE Installations ---${NC}"
 echo -e "Your base environment is ready. You can now optionally install heavily integrated development environments."
 echo -e "Note: These packages require testing/edge repositories and may introduce glibc compatibility layers.\n"
 
-# Prompt for Zed
-echo -e "${YELLOW}1. Zed Editor${NC} (High-performance, multiplayer code editor)"
-echo -e "   Requires the 'edge' repository and 'gcompat' (glibc compatibility layer)."
-read -p "$(echo -e ${BLUE}"Install Zed? [y/N]: "${NC})" INSTALL_ZED
-INSTALL_ZED=${INSTALL_ZED:-N}
+echo -e "${YELLOW}-- Select Additional Tools & IDEs --${NC}"
+echo -e "  [1] Zed Editor (Requires 'edge' repo, gcompat)"
+echo -e "  [2] Code OSS (Official open-source VS Code)"
+echo -e "  [3] Clipboard Manager (cliphist)"
+echo -e "  [4] Screenshot Tools (grim & slurp)"
+echo -e "  [5] Hardware Controls (brightnessctl & alsa-utils)"
+echo -e "  [6] Notification Daemon (mako)"
+echo -e "  [7] Modern Status Bar (waybar)"
+echo -e "  [8] Screen Locker (swayidle & swaylock)"
+echo -e "  [9] Glibc Compatibility Layer (Distrobox + Podman)"
 
-# Prompt for Code OSS
-echo -e "\n${YELLOW}2. Code OSS${NC} (Visual Studio Code Open Source)"
-echo -e "   The official open-source build provided in Alpine's 'testing' repository."
-read -p "$(echo -e ${BLUE}"Install Code OSS? [y/N]: "${NC})" INSTALL_CODEOSS
-INSTALL_CODEOSS=${INSTALL_CODEOSS:-N}
+echo -e "\n${RED}Note on Antigravity & Official VS Code:${NC} Choice [9] allows running these via an Ubuntu/Debian container."
 
-# Note regarding Antigravity
-echo -e "\n${RED}--- Note on Antigravity IDE ---${NC}"
-echo -e "You requested Antigravity IDE. Antigravity strictly requires a true 'glibc' environment (like Debian or Fedora)."
-echo -e "Because Alpine uses 'musl libc', Antigravity cannot be installed natively here without heavy containerization (like Distrobox or Docker)."
-echo -e "We recommend using Neovim, Zed, or Code OSS natively instead.\n"
+echo -e ""
+read -p "$(echo -e ${BLUE}"Enter numbers separated by space or comma (e.g., 1,3,4,9) - or press Enter to skip: "${NC})" USER_CHOICES
+
+case "$USER_CHOICES" in *1*) INSTALL_ZED=y ;; *) INSTALL_ZED=N ;; esac
+case "$USER_CHOICES" in *2*) INSTALL_CODEOSS=y ;; *) INSTALL_CODEOSS=N ;; esac
+case "$USER_CHOICES" in *3*) INSTALL_CLIPHIST=y ;; *) INSTALL_CLIPHIST=N ;; esac
+case "$USER_CHOICES" in *4*) INSTALL_SCREENSHOTS=y ;; *) INSTALL_SCREENSHOTS=N ;; esac
+case "$USER_CHOICES" in *5*) INSTALL_HWKEYS=y ;; *) INSTALL_HWKEYS=N ;; esac
+case "$USER_CHOICES" in *6*) INSTALL_MAKO=y ;; *) INSTALL_MAKO=N ;; esac
+case "$USER_CHOICES" in *7*) INSTALL_WAYBAR=y ;; *) INSTALL_WAYBAR=N ;; esac
+case "$USER_CHOICES" in *8*) INSTALL_LOCKER=y ;; *) INSTALL_LOCKER=N ;; esac
+case "$USER_CHOICES" in *9*) INSTALL_DISTROBOX=y ;; *) INSTALL_DISTROBOX=N ;; esac
+echo -e ""
 
 # --- 3. Execute Installations ---
 install_ide() {
@@ -82,20 +91,157 @@ install_ide() {
     fi
 }
 
+verify_app() {
+    local binary="$1"
+    local app_name="$2"
+    local run_advice="$3"
+
+    echo -ne "${BLUE}[*] Verifying ${app_name}...${NC} "
+    
+    # 1. Check if binary exists in PATH
+    if ! command -v "$binary" >/dev/null 2>&1; then
+        echo -e "${RED}[FAILED]${NC} Binary '$binary' not found in PATH."
+        return 1
+    fi
+
+    # 2. Check for missing shared libraries (crucial on Alpine)
+    # Filter for 'not found' in ldd output
+    local missing_libs=$(ldd "$(command -v "$binary")" 2>&1 | grep "not found" || true)
+    
+    if [ -n "$missing_libs" ]; then
+        echo -e "${RED}[FAILED]${NC} Missing dependencies for $app_name:"
+        echo "$missing_libs"
+        echo -e "${YELLOW}[TIP]${NC} Try installing 'gcompat' or checking edge repositories."
+        return 1
+    fi
+
+    echo -e "${GREEN}[VIABLE]${NC}"
+    echo -e "    ${YELLOW}>> To test manually:${NC} $run_advice"
+    return 0
+}
+
 echo -e "------------------------------------------------"
-if [[ "$INSTALL_ZED" =~ ^[Yy]$ ]]; then
+if [ "$INSTALL_ZED" = "y" ] || [ "$INSTALL_ZED" = "Y" ]; then
     # Enable edge testing repo specifically for zed if not already there
     if ! grep -q "edge/testing" /etc/apk/repositories; then
         echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
     fi
     # Install zed and the required compatibility layer
     install_ide "Zed Editor" "apk update && apk add zed gcompat"
+    verify_app "zed" "Zed Editor" "Inside Sway, press Mod+Enter and type 'zed'"
 fi
 
-if [[ "$INSTALL_CODEOSS" =~ ^[Yy]$ ]]; then
+if [ "$INSTALL_CODEOSS" = "y" ] || [ "$INSTALL_CODEOSS" = "Y" ]; then
     # Install code-oss from testing
     install_ide "Code OSS" "apk update && apk add code-oss"
+    verify_app "code-oss" "Code OSS" "Inside Sway, press Mod+Enter and type 'code-oss'"
+fi
+
+inject_sway_config() {
+    local config_text="$1"
+    for d in /root /home/*; do
+        if [ -w "$d/.config/sway/config" ]; then
+            echo "$config_text" >> "$d/.config/sway/config"
+        fi
+    done
+}
+
+if [ "$INSTALL_CLIPHIST" = "y" ] || [ "$INSTALL_CLIPHIST" = "Y" ]; then
+    install_ide "Cliphist" "apk add cliphist wl-clipboard"
+    verify_app "cliphist" "Cliphist" "Inside Sway, press Mod+c to see clipboard history"
+    inject_sway_config "
+# --- Added by Config Installer: Cliphist ---
+exec wl-paste --watch cliphist store
+bindsym \$mod+c exec cliphist list | dmenu | cliphist decode | wl-copy"
+fi
+
+if [ "$INSTALL_SCREENSHOTS" = "y" ] || [ "$INSTALL_SCREENSHOTS" = "Y" ]; then
+    install_ide "Grim & Slurp" "apk add grim slurp wl-clipboard"
+    verify_app "grim" "Grim" "Inside Sway, press Mod+Shift+s to take a screenshot"
+    verify_app "slurp" "Slurp" "(Used automatically by your screenshot shortcut)"
+    inject_sway_config "
+# --- Added by Config Installer: Screenshots ---
+bindsym \$mod+Shift+s exec grim -g \"\$(slurp)\" - | wl-copy"
+fi
+
+if [ "$INSTALL_HWKEYS" = "y" ] || [ "$INSTALL_HWKEYS" = "Y" ]; then
+    install_ide "Hardware Controls" "apk add brightnessctl alsa-utils"
+    verify_app "brightnessctl" "Brightness Control" "Press your physical Brightness keys"
+    verify_app "amixer" "Audio Control (ALSA)" "Press your physical Volume keys"
+    inject_sway_config "
+# --- Added by Config Installer: Hardware Controls ---
+bindsym XF86AudioRaiseVolume exec amixer sset Master 5%+
+bindsym XF86AudioLowerVolume exec amixer sset Master 5%-
+bindsym XF86AudioMute exec amixer sset Master toggle
+bindsym XF86MonBrightnessUp exec brightnessctl set 5%+
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-"
+fi
+
+if [ "$INSTALL_MAKO" = "y" ] || [ "$INSTALL_MAKO" = "Y" ]; then
+    install_ide "Mako Notifications" "apk add mako"
+    verify_app "mako" "Mako Notifications" "Launch with 'mako' and dismiss with Mod+Space"
+    inject_sway_config "
+# --- Added by Config Installer: Mako ---
+exec mako
+bindsym \$mod+space exec makoctl dismiss"
+fi
+
+if [ "$INSTALL_WAYBAR" = "y" ] || [ "$INSTALL_WAYBAR" = "Y" ]; then
+    install_ide "Waybar" "apk add waybar"
+    verify_app "waybar" "Waybar" "Log in to Sway to see your new status bar"
+    # Comment out default swaybar to prevent two bars
+    for d in /root /home/*; do
+        if [ -w "$d/.config/sway/config" ]; then
+            sed -i '/^bar {/,/^}/ s/^/# /' "$d/.config/sway/config"
+        fi
+    done
+    inject_sway_config "
+# --- Added by Config Installer: Waybar ---
+bar {
+    swaybar_command waybar
+}"
+fi
+
+if [ "$INSTALL_LOCKER" = "y" ] || [ "$INSTALL_LOCKER" = "Y" ]; then
+    install_ide "Swaylock & Swayidle" "apk add swaylock swayidle"
+    verify_app "swaylock" "Swaylock" "Lock manually with 'swaylock -c 000000'"
+    verify_app "swayidle" "Swayidle" "(Runs in background to auto-lock after 5 mins)"
+    inject_sway_config "
+# --- Added by Config Installer: Screen Locker ---
+exec swayidle -w \\
+    timeout 300 'swaylock -f -c 000000' \\
+    timeout 600 'swaymsg \"output * dpms off\"' resume 'swaymsg \"output * dpms on\"' \\
+    before-sleep 'swaylock -f -c 000000'"
+fi
+
+if [ "$INSTALL_DISTROBOX" = "y" ] || [ "$INSTALL_DISTROBOX" = "Y" ]; then
+    echo -e "${BLUE}[*] Setting up Glibc Compatibility Layer (Podman + Distrobox)...${NC}"
+    # podman requires cgroups v2
+    install_ide "Glibc Compatibility Layer" "apk add podman distrobox && rc-update add cgroups boot && rc-service cgroups start"
+    verify_app "podman" "Podman" "Required for Distrobox containers"
+    verify_app "distrobox" "Distrobox" "Used to run Ubuntu/Debian apps (see instructions below)"
+    
+    # Enable rootless podman for the users
+    for d in /root /home/*; do
+        if [ -d "$d" ]; then
+            uname=$(basename "$d")
+            # Setup subuid/subgid
+            if ! grep -q "$uname" /etc/subuid 2>/dev/null; then
+                echo "$uname:100000:65536" >> /etc/subuid
+                echo "$uname:100000:65536" >> /etc/subgid
+            fi
+        fi
+    done
+    echo -e "${GREEN}[+] Distrobox & Podman installed successfully.${NC}"
 fi
 
 echo -e "\n${GREEN}[SUCCESS] IDE Installation Phase Completed!${NC}"
 echo -e "You can now log into tty1 to start your Sway environment."
+
+if [ "$INSTALL_DISTROBOX" = "y" ] || [ "$INSTALL_DISTROBOX" = "Y" ]; then
+    echo -e "\n${YELLOW}--- Distrobox Usage for Antigravity/VS Code ---${NC}"
+    echo -e "1. Open a terminal and run: ${BLUE}distrobox create --name ubuntu --image ubuntu:latest${NC}"
+    echo -e "2. Enter the container: ${BLUE}distrobox enter ubuntu${NC}"
+    echo -e "3. Inside the container, you can install any glibc app (Antigravity, official VS Code, etc.)."
+    echo -e "4. They will automatically appear in your Sway environment!"
+fi

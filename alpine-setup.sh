@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Alpine Linux Setup Script
 # Stack: sway, foot, dmenu, ranger, LibreWolf+Tridactyl, neovim, zathura, cmus, nftables, dnscrypt-proxy
 
@@ -25,7 +25,7 @@ read -p "$(echo -e ${BLUE}"Delete this setup script automatically after a succes
 DELETE_SCRIPT=${DELETE_SCRIPT:-N}
 echo -e ""
 
-if [[ "$WIPE_CONFIGS" =~ ^[Yy]$ ]]; then
+if [ "$WIPE_CONFIGS" = "y" ] || [ "$WIPE_CONFIGS" = "Y" ]; then
     echo -ne "${BLUE}[*] Executing:${NC} Deep Wiping old applications and configurations... "
     
     (
@@ -67,11 +67,10 @@ if [ -f /etc/conf.d/loadkmap ]; then
     BKEYMAP=$(grep "^KEYMAP=" /etc/conf.d/loadkmap | cut -d'=' -f2 | tr -d '"'\')
     KB_LAYOUT=$(echo $BKEYMAP | cut -d'-' -f1)
     # Check if there's a variant (like -mac)
-    if [[ "$BKEYMAP" == *"-"* ]]; then
-        KB_VARIANT=$(echo $BKEYMAP | cut -d'-' -f2)
-    else
-        KB_VARIANT=""
-    fi
+    case "$BKEYMAP" in
+        *-*) KB_VARIANT=$(echo $BKEYMAP | cut -d'-' -f2) ;;
+        *)   KB_VARIANT="" ;;
+    esac
     echo -e "${GREEN}[+] Detected Keyboard Layout:${NC} $KB_LAYOUT"
     [ -n "$KB_VARIANT" ] && echo -e "${GREEN}[+] Detected Variant:${NC} $KB_VARIANT"
 else
@@ -233,14 +232,14 @@ run_step "Configure and enable dnscrypt-proxy" "setup_dns" "Ensure file /etc/res
 # --- 14. Configure Login (.profile) ---
 setup_login() {
     # Auto-start sway on login on tty1
-    local user_dirs=("/root")
+    user_dirs="/root"
     for d in /home/*; do
         if [ -d "$d" ]; then
-            user_dirs+=("$d")
+            user_dirs="$user_dirs $d"
         fi
     done
     
-    for dir in "${user_dirs[@]}"; do
+    for dir in $user_dirs; do
         if [ -w "$dir" ]; then
             # 1. Setup Sway keyboard layout
             mkdir -p "$dir/.config/sway"
@@ -257,6 +256,18 @@ input * {
     xkb_layout "$KB_LAYOUT"
     xkb_variant "$KB_VARIANT"
 }
+
+# Explicitly set the Mod key (Mod4 = Super/Windows/Command key)
+set \$mod Mod4
+
+# Explicitly set the terminal to exactly what we installed
+set \$term foot
+
+# Explicitly set the application launcher to dmenu
+set \$menu dmenu_path | dmenu | xargs swaymsg exec --
+
+# --- Auto-Test LibreWolf on First Run ---
+exec [ ! -f ~/.local/state/alpine_setup_tested ] && mkdir -p ~/.local/state && touch ~/.local/state/alpine_setup_tested && swaymsg exec librewolf
 EOF
 
             # 2. Auto-start sway on login on tty1
@@ -265,15 +276,17 @@ if [ -z "${DISPLAY}" ] && [ -n "${XDG_VTNR}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
   exec sway
 fi
 EOF
-            if [[ "$dir" == /home/* ]]; then
-                # Get the username from the directory path
-                local uname=$(basename "$dir")
-                chown -R "$uname:$uname" "$dir/.config"
-                chown "$uname:$uname" "$dir/.profile"
-                # Add user to seat group (required for wayland/sway)
-                adduser "$uname" seat || true
-                adduser "$uname" video || true
-            fi
+            case "$dir" in
+                /home/*)
+                    # Get the username from the directory path
+                    uname=$(basename "$dir")
+                    chown -R "$uname:$uname" "$dir/.config"
+                    chown "$uname:$uname" "$dir/.profile"
+                    # Add user to seat group (required for wayland/sway)
+                    adduser "$uname" seat || true
+                    adduser "$uname" video || true
+                    ;;
+            esac
         fi
     done
     adduser root seat || true
@@ -288,11 +301,15 @@ echo -e "------------------------------------------------"
 echo -e "${GREEN}[SUCCESS] Alpine Setup Completed!${NC}"
 echo -e "\n${YELLOW}IMPORTANT USAGE NOTES:${NC}"
 echo -e "1. ${BLUE}Start the GUI:${NC} Log in to tty1 as your regular user. Sway will automatically start."
-echo -e "   (Sway is exactly like i3wm but designed for Wayland, supporting your 'foot' terminal natively)."
+echo -e "2. ${BLUE}Initial Test:${NC} On your very first login, ${GREEN}LibreWolf will launch automatically${NC} to verify that the Wayland graphical stack is working properly."
+echo -e "   -> ${YELLOW}To close LibreWolf (or any window):${NC} Press ${GREEN}Mod + Shift + q${NC}."
+echo -e "   -> ${YELLOW}To open a terminal (foot):${NC} Press ${GREEN}Mod + Enter${NC}."
+echo -e "   -> ${YELLOW}To launch LibreWolf manually again:${NC} Press Mod+Enter, type 'librewolf', and press Enter."
+echo -e "   *(Note: The 'Mod' key is your Super/Windows/Command key).* "
 
-if [[ "$DELETE_SCRIPT" =~ ^[Yy]$ ]]; then
-    echo -e "2. ${BLUE}Cleanup:${NC} The setup script has been deleted."
+if [ "$DELETE_SCRIPT" = "y" ] || [ "$DELETE_SCRIPT" = "Y" ]; then
+    echo -e "3. ${BLUE}Cleanup:${NC} The setup script has been deleted."
     rm -f "$0"
 else
-    echo -e "2. ${BLUE}File Locations:${NC} Your setup script is saved at: $(realpath "$0")"
+    echo -e "3. ${BLUE}File Locations:${NC} Your setup script is saved at: $(realpath "$0" 2>/dev/null || readlink -f "$0")"
 fi
