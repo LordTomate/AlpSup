@@ -47,6 +47,43 @@ echo -e "   The official open-source build provided in Alpine's 'testing' reposi
 read -p "$(echo -e ${BLUE}"Install Code OSS? [y/N]: "${NC})" INSTALL_CODEOSS
 INSTALL_CODEOSS=${INSTALL_CODEOSS:-N}
 
+# Prompt for Cliphist
+echo -e "\n${YELLOW}3. Clipboard Manager (cliphist & wl-clipboard)${NC}"
+echo -e "   Stores last 50 copied items. Bind Mod+c to list and paste."
+read -p "$(echo -e ${BLUE}"Install Cliphist? [y/N]: "${NC})" INSTALL_CLIPHIST
+INSTALL_CLIPHIST=${INSTALL_CLIPHIST:-N}
+
+# Prompt for Screenshots
+echo -e "\n${YELLOW}4. Screenshot Tools (grim & slurp)${NC}"
+echo -e "   Bind Mod+Shift+s to freeze screen, select area, and copy to clipboard."
+read -p "$(echo -e ${BLUE}"Install Screenshot Tools? [y/N]: "${NC})" INSTALL_SCREENSHOTS
+INSTALL_SCREENSHOTS=${INSTALL_SCREENSHOTS:-N}
+
+# Prompt for Hardware Keys
+echo -e "\n${YELLOW}5. Hardware Controls (brightnessctl & alsa-utils)${NC}"
+echo -e "   Enables physical volume and brightness keys on your keyboard."
+read -p "$(echo -e ${BLUE}"Install Hardware Controls? [y/N]: "${NC})" INSTALL_HWKEYS
+INSTALL_HWKEYS=${INSTALL_HWKEYS:-N}
+
+# Prompt for Mako
+echo -e "\n${YELLOW}6. Notification Daemon (mako)${NC}"
+echo -e "   Hover notifications for system events (bind Mod+Space to dismiss)."
+read -p "$(echo -e ${BLUE}"Install Mako? [y/N]: "${NC})" INSTALL_MAKO
+INSTALL_MAKO=${INSTALL_MAKO:-N}
+
+# Prompt for Waybar
+echo -e "\n${YELLOW}7. Modern Status Bar (waybar)${NC}"
+echo -e "   Replaces the default swaybar with the highly customizable Waybar."
+read -p "$(echo -e ${BLUE}"Install Waybar? [y/N]: "${NC})" INSTALL_WAYBAR
+INSTALL_WAYBAR=${INSTALL_WAYBAR:-N}
+
+# Prompt for Swaylock
+echo -e "\n${YELLOW}8. Screen Locker (swayidle & swaylock)${NC}"
+echo -e "   Auto-locks screen after 5 minutes of inactivity."
+read -p "$(echo -e ${BLUE}"Install Screen Locker? [y/N]: "${NC})" INSTALL_LOCKER
+INSTALL_LOCKER=${INSTALL_LOCKER:-N}
+
+
 # Note regarding Antigravity
 echo -e "\n${RED}--- Note on Antigravity IDE ---${NC}"
 echo -e "You requested Antigravity IDE. Antigravity strictly requires a true 'glibc' environment (like Debian or Fedora)."
@@ -95,6 +132,74 @@ fi
 if [ "$INSTALL_CODEOSS" = "y" ] || [ "$INSTALL_CODEOSS" = "Y" ]; then
     # Install code-oss from testing
     install_ide "Code OSS" "apk update && apk add code-oss"
+fi
+
+inject_sway_config() {
+    local config_text="$1"
+    for d in /root /home/*; do
+        if [ -w "$d/.config/sway/config" ]; then
+            echo "$config_text" >> "$d/.config/sway/config"
+        fi
+    done
+}
+
+if [ "$INSTALL_CLIPHIST" = "y" ] || [ "$INSTALL_CLIPHIST" = "Y" ]; then
+    install_ide "Cliphist" "apk add cliphist wl-clipboard"
+    inject_sway_config "
+# --- Added by Config Installer: Cliphist ---
+exec wl-paste --watch cliphist store
+bindsym \$mod+c exec cliphist list | dmenu | cliphist decode | wl-copy"
+fi
+
+if [ "$INSTALL_SCREENSHOTS" = "y" ] || [ "$INSTALL_SCREENSHOTS" = "Y" ]; then
+    install_ide "Grim & Slurp" "apk add grim slurp wl-clipboard"
+    inject_sway_config "
+# --- Added by Config Installer: Screenshots ---
+bindsym \$mod+Shift+s exec grim -g \"\$(slurp)\" - | wl-copy"
+fi
+
+if [ "$INSTALL_HWKEYS" = "y" ] || [ "$INSTALL_HWKEYS" = "Y" ]; then
+    install_ide "Hardware Controls" "apk add brightnessctl alsa-utils"
+    inject_sway_config "
+# --- Added by Config Installer: Hardware Controls ---
+bindsym XF86AudioRaiseVolume exec amixer sset Master 5%+
+bindsym XF86AudioLowerVolume exec amixer sset Master 5%-
+bindsym XF86AudioMute exec amixer sset Master toggle
+bindsym XF86MonBrightnessUp exec brightnessctl set 5%+
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-"
+fi
+
+if [ "$INSTALL_MAKO" = "y" ] || [ "$INSTALL_MAKO" = "Y" ]; then
+    install_ide "Mako Notifications" "apk add mako"
+    inject_sway_config "
+# --- Added by Config Installer: Mako ---
+exec mako
+bindsym \$mod+space exec makoctl dismiss"
+fi
+
+if [ "$INSTALL_WAYBAR" = "y" ] || [ "$INSTALL_WAYBAR" = "Y" ]; then
+    install_ide "Waybar" "apk add waybar"
+    # Comment out default swaybar to prevent two bars
+    for d in /root /home/*; do
+        if [ -w "$d/.config/sway/config" ]; then
+            sed -i '/^bar {/,/^}/ s/^/# /' "$d/.config/sway/config"
+        fi
+    done
+    inject_sway_config "
+# --- Added by Config Installer: Waybar ---
+bar {
+    swaybar_command waybar
+}"
+fi
+
+if [ "$INSTALL_LOCKER" = "y" ] || [ "$INSTALL_LOCKER" = "Y" ]; then
+    install_ide "Swaylock & Swayidle" "apk add swaylock swayidle"
+    inject_sway_config "
+# --- Added by Config Installer: Screen Locker ---
+exec swayidle -w \\
+    timeout 300 'swaylock -f -c 000000' \\
+    timeout 600 'swaymsg \"output * dpms off\"' resume 'swaymsg \"output * dpms on\"' \\
+    before-sleep 'swaylock -f -c 000000'"
 fi
 
 echo -e "\n${GREEN}[SUCCESS] IDE Installation Phase Completed!${NC}"
