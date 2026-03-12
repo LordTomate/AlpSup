@@ -17,9 +17,9 @@ echo -e "${GREEN}Starting Master IDE Installer for Alpine Linux...${NC}\n"
 echo -e "${BLUE}[*] Checking for base setup script (alpine-setup.sh)...${NC}"
 if [ ! -f "./alpine-setup.sh" ]; then
     echo -e "${YELLOW}>> alpine-setup.sh not found locally. Downloading from GitHub...${NC}"
-    if wget -qO alpine-setup.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-setup.sh; then
+    if wget -O alpine-setup.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-setup.sh; then
         chmod +x alpine-setup.sh
-        echo -e "${GREEN}[+] Successfully downloaded alpine-setup.sh${NC}"
+        echo -e "\n${GREEN}[+] Successfully downloaded alpine-setup.sh${NC}"
     else
         echo -e "${RED}[!] ERROR:${NC} Failed to download alpine-setup.sh. Please check your internet connection."
         exit 1
@@ -58,11 +58,25 @@ install_ide() {
     local name="$1"
     local command="$2"
     
-    echo -e "${BLUE}[*] Installing ${name}...${NC}"
-    if eval "$command" > /tmp/alpine-ide-step.log 2>&1; then
-        echo -e "${GREEN}[+] Success:${NC} Installed ${name}."
+    echo -ne "${BLUE}[*] Installing ${name}...${NC} "
+    eval "$command" > /tmp/alpine-ide-step.log 2>&1 &
+    local pid=$!
+    
+    local spinstr='|/-\'
+    while kill -0 $pid 2>/dev/null; do
+        local temp=${spinstr#?}
+        printf "[%c]" "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep 0.1
+        printf "\b\b\b"
+    done
+    wait $pid
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
+        echo -e "\r\033[K${GREEN}[+] Success:${NC} Installed ${name}."
     else
-        echo -e "${RED}[!] ERROR:${NC} Failed to install ${name}."
+        echo -e "\r\033[K${RED}[!] ERROR:${NC} Failed to install ${name}."
         echo -e "         Check /tmp/alpine-ide-step.log for details."
         tail -n 5 /tmp/alpine-ide-step.log
     fi

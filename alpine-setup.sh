@@ -26,15 +26,37 @@ DELETE_SCRIPT=${DELETE_SCRIPT:-N}
 echo -e ""
 
 if [[ "$WIPE_CONFIGS" =~ ^[Yy]$ ]]; then
-    echo -e "${BLUE}[*] Executing:${NC} Wiping old configurations..."
-    for d in /root /home/*; do
-        if [ -d "$d" ]; then
-            rm -rf "$d/.config/sway" "$d/.config/foot" "$d/.config/ranger" "$d/.config/nvim" "$d/.config/zathura" "$d/.config/cmus" "$d/.profile"
-        fi
+    echo -ne "${BLUE}[*] Executing:${NC} Deep Wiping old applications and configurations... "
+    
+    (
+        # 1. Uninstall the software stack if it exists
+        apk del --quiet --purge \
+            sway swaybg xwayland wl-clipboard foot dmenu ranger \
+            librewolf neovim zathura zathura-pdf-mupdf cmus nftables \
+            dnscrypt-proxy eudev dbus seatd font-dejavu >/dev/null 2>&1 || true
+            
+        # 2. Delete configuration folders
+        for d in /root /home/*; do
+            if [ -d "$d" ]; then
+                rm -rf "$d/.config/sway" "$d/.config/foot" "$d/.config/ranger" "$d/.config/nvim" "$d/.config/zathura" "$d/.config/cmus" "$d/.profile"
+            fi
+        done
+        rm -f /etc/nftables.nft /etc/sway/config
+        rm -rf /usr/lib/librewolf/distribution
+    ) &
+    
+    pid=$!
+    spinstr='|/-\'
+    while kill -0 $pid 2>/dev/null; do
+        temp=${spinstr#?}
+        printf "[%c]" "$spinstr"
+        spinstr=$temp${spinstr%"$temp"}
+        sleep 0.1
+        printf "\b\b\b"
     done
-    rm -f /etc/nftables.nft /etc/sway/config
-    rm -rf /usr/lib/librewolf/distribution
-    echo -e "${GREEN}[+] Success:${NC} Wiped existing configurations.\n"
+    wait $pid
+    
+    echo -e "\r\033[K${GREEN}[+] Success:${NC} System deeply wiped.\n"
 fi
 
 # --- 0. Keyboard Configuration (Auto-Detect) ---
@@ -65,12 +87,26 @@ run_step() {
     local command="$2"
     local fix_msg="$3"
     
-    echo -e "${BLUE}[*] Executing:${NC} $step_name"
-    # Run the command and capture its output to a log file
-    if eval "$command" > /tmp/alpine-setup-step.log 2>&1; then
-        echo -e "${GREEN}[+] Success:${NC} $step_name\n"
+    echo -ne "${BLUE}[*] Executing:${NC} $step_name ... "
+    # Run the command in the background, redirecting output
+    eval "$command" > /tmp/alpine-setup-step.log 2>&1 &
+    local pid=$!
+    
+    local spinstr='|/-\'
+    while kill -0 $pid 2>/dev/null; do
+        local temp=${spinstr#?}
+        printf "[%c]" "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep 0.1
+        printf "\b\b\b"
+    done
+    wait $pid
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
+        echo -e "\r\033[K${GREEN}[+] Success:${NC} $step_name\n"
     else
-        echo -e "${RED}[!] ERROR:${NC} Failed to execute: $step_name"
+        echo -e "\r\033[K${RED}[!] ERROR:${NC} Failed to execute: $step_name"
         echo -e "${YELLOW}[?] FIX:${NC} $fix_msg"
         echo -e "         Detailed log placed at: /tmp/alpine-setup-step.log"
         echo -e "         Last 5 lines of log:"
