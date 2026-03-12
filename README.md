@@ -32,12 +32,12 @@ Run one of the following commands to download the script from GitHub:
 
 **Option 1. Download the basic setup script:**
 ```sh
-wget -O alpine-setup.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-setup.sh
+wget -O alpine-setup.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/alpine-setup.sh
 ```
 
 **Option 2. Download the IDE Master Installer** (which runs the basic setup automatically):
 ```sh
-wget -O alpine-install-ide.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-install-ide.sh
+wget -O alpine-install-ide.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/alpine-install-ide.sh
 ```
 In the following steps, we will use the Master Installer script.
 *(Alternatively, if you are transferring the files manually over SSH, you can copy them from your host machine):*
