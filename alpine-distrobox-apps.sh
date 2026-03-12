@@ -33,11 +33,12 @@ fi
 
 # --- App Selection ---
 echo -e "${YELLOW}-- Select Apps to Install inside Ubuntu --${NC}"
+echo -e "  [0] None - Set up container only, install apps later"
 echo -e "  [1] VS Code (Official Microsoft build with full marketplace)"
 echo -e "  [2] Antigravity IDE"
 echo -e "  [3] Both VS Code and Antigravity"
 echo -e ""
-read -p "$(echo -e ${BLUE}"Enter your choice [1/2/3] - or press Enter to cancel: "${NC})" APP_CHOICE
+read -p "$(echo -e ${BLUE}"Enter your choice [0/1/2/3]: "${NC})" APP_CHOICE
 
 case "$APP_CHOICE" in
     ""|q|Q|0)
