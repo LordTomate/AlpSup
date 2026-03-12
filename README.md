@@ -24,47 +24,58 @@ This repository contains an automated setup script (`alpine-setup.sh`) to quickl
 
 Follow these steps to download and run the setup script on a completely fresh Alpine target:
 
-### 1. Download the Setup Script
+### 1. Download the Setup Scripts
 
-Log into your fresh Alpine installation. Since you only have a base command line, you can download the script directly using `wget` (which is included in Alpine by default).
+Log into your fresh Alpine installation. Since you only have a base command line, you can download the scripts directly using `wget` (which is included in Alpine by default).
 
-Run the following command to download the script from GitHub:
+Run one of the following commands to download the script from GitHub:
 
+**Option 1. Download the basic setup script:**
 ```sh
 wget -O alpine-setup.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-setup.sh
 ```
 
-*(Alternatively, if you are transferring the file manually over SSH, you can copy it from your host machine):*
+**Option 2. Download the IDE Master Installer** (which runs the basic setup automatically):
+```sh
+wget -O alpine-install-ide.sh https://raw.githubusercontent.com/LordTomate/alpine_setup/main/alpine-install-ide.sh
+```
+In the following steps, we will use the Master Installer script.
+*(Alternatively, if you are transferring the files manually over SSH, you can copy them from your host machine):*
 ```sh
 # Run this from your local machine while SSH is enabled on Alpine
-scp alpine-setup.sh root@<alpine-ip-address>:/root/
+scp alpine-install-ide.sh root@<alpine-ip-address>:/root/
 ```
 
-### 2. Make the Script Executable
-
-Navigate to the directory where the script is located and grant execution permissions:
-
+### 2. High-Performance IDEs & Power Tools
+Run the master installer to selectively install IDEs and Wayland power tools:
 ```sh
-# Assuming the file is in your current directory
-chmod +x alpine-setup.sh
+chmod +x alpine-install-ide.sh
+./alpine-install-ide.sh
 ```
+The installer features a **multi-select menu** (Titus-style) where you can enter numbers (e.g., `1,3,4,9`) to batch-install:
+- **IDEs**: Zed, Code OSS.
+- **Power Tools**: `cliphist` (Clipboard), `grim/slurp` (Screenshots), Hardware Key support, `mako` (Notifications), `waybar`, and `swaylock`.
+- **Glibc Compatibility**: Option [9] installs **Distrobox + Podman**, allowing you to run a Debian/Ubuntu container to use glibc-only apps like **Antigravity IDE** or official VS Code natively within your Sway environment.
 
-### 3. Run the Setup Script
+---
 
-The `alpine-setup.sh` script handles everything, including optional IDE installations. It must be executed with root privileges to install packages and configure system services.
+## Post-Installation: Running Antigravity/glibc Apps
+If you installed the **Glibc Compatibility Layer** ([9]):
+1. Open a terminal and create your container: `distrobox create --name ubuntu --image ubuntu:latest`
+2. Enter the box: `distrobox enter ubuntu`
+3. Download/install your `.deb` or binary (like Antigravity) inside. It will automatically share your Sway Wayland socket and look like a native app.
 
 Run it using:
 ```sh
-./alpine-setup.sh
+./alpine-install-ide.sh
 ```
-*(If you are logged as a normal user and have sudo configured, run `sudo ./alpine-setup.sh`)*
+*(If you are logged as a normal user and have sudo configured, run `sudo ./alpine-install-ide.sh`)*
 
 The script will present a series of prompts:
-1. Optionally wipe existing configurations and applications deeper than a standard install.
-2. Choose whether to install **Zed Editor** and **Code OSS** (VS Code Open Source).
-3. Optionally self-destruct the setup script across execution completion.
-
-> **Keyboard Context**: The script automatically detects your active keyboard layout from Alpine's internal configuration that was set during the initial `setup-alpine`.
+1. Optionally wipe existing configurations.
+2. Provide your keyboard layout.
+3. Choose whether to install **Zed Editor** and **Code OSS** (VS Code Open Source).
+4. Optionally self-destruct the setup scripts.
 
 ### 4. Observe the Output
 

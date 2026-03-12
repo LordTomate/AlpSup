@@ -44,11 +44,12 @@ echo -e "  [5] Hardware Controls (brightnessctl & alsa-utils)"
 echo -e "  [6] Notification Daemon (mako)"
 echo -e "  [7] Modern Status Bar (waybar)"
 echo -e "  [8] Screen Locker (swayidle & swaylock)"
+echo -e "  [9] Glibc Compatibility Layer (Distrobox + Podman)"
 
-echo -e "\n${RED}Note on Antigravity IDE:${NC} It requires a true glibc environment and cannot run natively here."
+echo -e "\n${RED}Note on Antigravity & Official VS Code:${NC} Choice [9] allows running these via an Ubuntu/Debian container."
 
 echo -e ""
-read -p "$(echo -e ${BLUE}"Enter numbers separated by space or comma (e.g., 1,3,4,8) - or press Enter to skip: "${NC})" USER_CHOICES
+read -p "$(echo -e ${BLUE}"Enter numbers separated by space or comma (e.g., 1,3,4,9) - or press Enter to skip: "${NC})" USER_CHOICES
 
 case "$USER_CHOICES" in *1*) INSTALL_ZED=y ;; *) INSTALL_ZED=N ;; esac
 case "$USER_CHOICES" in *2*) INSTALL_CODEOSS=y ;; *) INSTALL_CODEOSS=N ;; esac
@@ -58,6 +59,7 @@ case "$USER_CHOICES" in *5*) INSTALL_HWKEYS=y ;; *) INSTALL_HWKEYS=N ;; esac
 case "$USER_CHOICES" in *6*) INSTALL_MAKO=y ;; *) INSTALL_MAKO=N ;; esac
 case "$USER_CHOICES" in *7*) INSTALL_WAYBAR=y ;; *) INSTALL_WAYBAR=N ;; esac
 case "$USER_CHOICES" in *8*) INSTALL_LOCKER=y ;; *) INSTALL_LOCKER=N ;; esac
+case "$USER_CHOICES" in *9*) INSTALL_DISTROBOX=y ;; *) INSTALL_DISTROBOX=N ;; esac
 echo -e ""
 
 # --- 3. Execute Installations ---
@@ -172,5 +174,32 @@ exec swayidle -w \\
     before-sleep 'swaylock -f -c 000000'"
 fi
 
+if [ "$INSTALL_DISTROBOX" = "y" ] || [ "$INSTALL_DISTROBOX" = "Y" ]; then
+    echo -e "${BLUE}[*] Setting up Glibc Compatibility Layer (Podman + Distrobox)...${NC}"
+    # podman requires cgroups v2
+    install_ide "Glibc Compatibility Layer" "apk add podman distrobox && rc-update add cgroups boot && rc-service cgroups start"
+    
+    # Enable rootless podman for the users
+    for d in /root /home/*; do
+        if [ -d "$d" ]; then
+            uname=$(basename "$d")
+            # Setup subuid/subgid
+            if ! grep -q "$uname" /etc/subuid 2>/dev/null; then
+                echo "$uname:100000:65536" >> /etc/subuid
+                echo "$uname:100000:65536" >> /etc/subgid
+            fi
+        fi
+    done
+    echo -e "${GREEN}[+] Distrobox & Podman installed successfully.${NC}"
+fi
+
 echo -e "\n${GREEN}[SUCCESS] IDE Installation Phase Completed!${NC}"
 echo -e "You can now log into tty1 to start your Sway environment."
+
+if [ "$INSTALL_DISTROBOX" = "y" ] || [ "$INSTALL_DISTROBOX" = "Y" ]; then
+    echo -e "\n${YELLOW}--- Distrobox Usage for Antigravity/VS Code ---${NC}"
+    echo -e "1. Open a terminal and run: ${BLUE}distrobox create --name ubuntu --image ubuntu:latest${NC}"
+    echo -e "2. Enter the container: ${BLUE}distrobox enter ubuntu${NC}"
+    echo -e "3. Inside the container, you can install any glibc app (Antigravity, official VS Code, etc.)."
+    echo -e "4. They will automatically appear in your Sway environment!"
+fi
