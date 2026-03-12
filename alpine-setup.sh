@@ -67,11 +67,10 @@ if [ -f /etc/conf.d/loadkmap ]; then
     BKEYMAP=$(grep "^KEYMAP=" /etc/conf.d/loadkmap | cut -d'=' -f2 | tr -d '"'\')
     KB_LAYOUT=$(echo $BKEYMAP | cut -d'-' -f1)
     # Check if there's a variant (like -mac)
-    if [[ "$BKEYMAP" == *"-"* ]]; then
-        KB_VARIANT=$(echo $BKEYMAP | cut -d'-' -f2)
-    else
-        KB_VARIANT=""
-    fi
+    case "$BKEYMAP" in
+        *-*) KB_VARIANT=$(echo $BKEYMAP | cut -d'-' -f2) ;;
+        *)   KB_VARIANT="" ;;
+    esac
     echo -e "${GREEN}[+] Detected Keyboard Layout:${NC} $KB_LAYOUT"
     [ -n "$KB_VARIANT" ] && echo -e "${GREEN}[+] Detected Variant:${NC} $KB_VARIANT"
 else
