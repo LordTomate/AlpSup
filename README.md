@@ -89,6 +89,68 @@ The script executes step-by-step. If any step fails:
 
 ### 5. Finalize the Setup
 
-Once the script completes successfully:
-1. Log in to `tty1` with your standard (non-root) user account.
-2. Your sway window manager (and foot terminal) will automatically start immediately on successful login.
+Once the script completes successfully, start your graphical environment:
+
+---
+
+## Starting the GUI (TTY1)
+
+> **Alpine has no display manager.** Sway is launched manually from the text login screen.
+
+1. **Switch to TTY1**: Press **`Ctrl + Alt + F1`** (you may already be on it after a fresh boot).
+2. **Log in** with your regular (non-root) user account. Type your username, press Enter, then your password.
+3. **Sway starts automatically** — your `.profile` runs `exec sway` the moment you log in on TTY1. You will see a black screen for 1–2 seconds, then your desktop appears.
+
+> **First boot test**: On the very first login, **LibreWolf will launch automatically** to confirm your Wayland stack is working.
+
+---
+
+## Using LibreWolf
+
+| Action | Key |
+|---|---|
+| **Open a terminal** (foot) | `Mod + Enter` |
+| **Launch LibreWolf manually** | Inside foot, type `librewolf` and press Enter |
+| **Close any window** | `Mod + Shift + q` |
+| **Open app launcher** | `Mod + d` |
+
+> `Mod` = your **Super / Windows / Command (⌘)** key.  
+> LibreWolf does **not** need Flatpak — it is installed natively via `apk`.
+
+---
+
+## Battery Display (Akku)
+
+If you installed **Waybar** (option [7]), add a battery module to its config:
+
+```sh
+mkdir -p ~/.config/waybar
+cat >> ~/.config/waybar/config << 'EOF'
+{
+    "modules-right": ["battery", "clock"],
+    "battery": {
+        "format": "{capacity}% {icon}",
+        "format-icons": ["", "", "", "", ""],
+        "states": { "warning": 30, "critical": 10 }
+    }
+}
+EOF
+```
+Then reload Sway config: `Mod + Shift + c`
+
+---
+
+## Troubleshooting: "zed not found in PATH"
+
+Zed installs its binary at `/usr/lib/zed/zed` on Alpine, with a wrapper at `/usr/bin/zed`. If verification fails:
+
+```sh
+# Check where zed actually is
+apk info -L zed | grep bin
+
+# If /usr/bin/zed exists but is not executable:
+chmod +x /usr/bin/zed
+
+# If missing glibc compatibility:
+apk add gcompat libc6-compat
+```

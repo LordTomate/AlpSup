@@ -97,21 +97,25 @@ verify_app() {
     local run_advice="$3"
 
     echo -ne "${BLUE}[*] Verifying ${app_name}...${NC} "
-    
-    # 1. Check if binary exists in PATH
-    if ! command -v "$binary" >/dev/null 2>&1; then
-        echo -e "${RED}[FAILED]${NC} Binary '$binary' not found in PATH."
+
+    # 1. Find binary - check PATH, then common Alpine install locations
+    local bin_path=""
+    bin_path=$(command -v "$binary" 2>/dev/null) || \
+    bin_path=$(ls /usr/bin/$binary /usr/local/bin/$binary /usr/lib/$binary/$binary 2>/dev/null | head -1) || true
+
+    if [ -z "$bin_path" ]; then
+        echo -e "${RED}[FAILED]${NC} '$binary' not found in PATH."
+        echo -e "    ${YELLOW}[TIP]${NC} Try: apk info -L $(apk search -q $binary | head -1) | grep bin"
         return 1
     fi
 
-    # 2. Check for missing shared libraries (crucial on Alpine)
-    # Filter for 'not found' in ldd output
-    local missing_libs=$(ldd "$(command -v "$binary")" 2>&1 | grep "not found" || true)
-    
-    if [ -n "$missing_libs" ]; then
-        echo -e "${RED}[FAILED]${NC} Missing dependencies for $app_name:"
-        echo "$missing_libs"
-        echo -e "${YELLOW}[TIP]${NC} Try installing 'gcompat' or checking edge repositories."
+    # 2. Check for missing shared libraries
+    # On Alpine (musl libc), ldd says "Error loading" for missing libs
+    local ldd_out=$(ldd "$bin_path" 2>&1 || true)
+    if echo "$ldd_out" | grep -qiE 'not found|Error loading'; then
+        echo -e "${RED}[FAILED]${NC} Missing libraries for $app_name:"
+        echo "$ldd_out" | grep -iE 'not found|Error loading'
+        echo -e "    ${YELLOW}[TIP]${NC} Run: apk add gcompat libc6-compat"
         return 1
     fi
 
