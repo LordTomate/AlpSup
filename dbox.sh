@@ -181,6 +181,3 @@ echo -e "  ${BLUE}distrobox enter ${BOX_NAME}${NC}          - Enter the Ubuntu s
 echo -e "  ${BLUE}distrobox list${NC}                        - List all containers"
 echo -e "  ${BLUE}distrobox rm ${BOX_NAME}${NC}              - Remove the container"
 echo -e "  ${BLUE}distrobox upgrade ${BOX_NAME}${NC}         - Update software inside the box"
-
-# dbox.sh is called by ide.sh which handles cleanup - self-delete silently
-rm -f "$0"
