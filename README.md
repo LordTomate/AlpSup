@@ -191,3 +191,69 @@ chmod +x /usr/bin/zed
 # If missing glibc compatibility:
 apk add gcompat libc6-compat
 ```
+
+---
+
+## Using Zed Editor (option [1])
+
+| Action | Command |
+|---|---|
+| **Launch** | `Mod + Enter` → type `zed` → Enter |
+| **Open a file** | `zed /path/to/file` |
+| **Open a folder** | `zed /path/to/project` |
+| **Close window** | `Mod + Shift + q` |
+
+> Zed requires `gcompat` (glibc compatibility layer). If it crashes on launch, run: `apk add gcompat libc6-compat`
+
+---
+
+## Using Code OSS (option [2])
+
+| Action | Command |
+|---|---|
+| **Launch** | `Mod + Enter` → type `code-oss` → Enter |
+| **Open a folder** | `code-oss /path/to/project` |
+| **Close window** | `Mod + Shift + q` |
+
+> Code OSS is the telemetry-free VS Code build. It does **not** have access to Microsoft's extension marketplace — use [Open VSX](https://open-vsx.org) instead for extensions.
+
+---
+
+## Using Distrobox Containers (option [9])
+
+Distrobox runs a full Ubuntu container that shares your Wayland display and home folder. Apps installed inside appear as if they are native.
+
+### Managing your container
+
+```sh
+distrobox enter ubuntu-dev       # Enter the Ubuntu shell
+distrobox list                   # Show all containers
+distrobox stop ubuntu-dev        # Stop the container
+distrobox rm ubuntu-dev          # Delete the container entirely
+distrobox upgrade ubuntu-dev     # Upgrade packages inside
+```
+
+### Using VS Code from a container
+
+| Action | Command |
+|---|---|
+| **Launch (from host terminal)** | `code` |
+| **Launch (from inside container)** | `distrobox enter ubuntu-dev -- code` |
+| **Close** | `Mod + Shift + q` or `Ctrl + q` |
+
+> VS Code in Distrobox has full access to the official **Microsoft extension marketplace** and Copilot.  
+> ⚠️ It sends telemetry to Microsoft by default. Disable via: `File → Preferences → Telemetry → off`
+
+### Using Antigravity from a container
+
+| Action | Command |
+|---|---|
+| **Launch (from host terminal)** | `antigravity` |
+| **Launch (from inside container)** | `distrobox enter ubuntu-dev -- antigravity` |
+| **Close** | `Mod + Shift + q` |
+
+### Container storage & data
+
+- Your **home directory is shared** between Alpine host and the container — files you create inside are accessible outside and vice versa.
+- Container system files (Ubuntu root) live at `~/.local/share/containers/`. Delete the container with `distrobox rm` to reclaim this space (~1.5 GB).
+- **Network** passes straight through the host — dnscrypt-proxy and nftables apply to container traffic too.
