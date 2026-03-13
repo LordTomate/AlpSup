@@ -140,6 +140,7 @@ run_step "Upgrade existing packages" "apk upgrade" "Check your network connectio
 
 # --- 4. Install Wayland, Window Manager, and Base ---
 run_step "Install core services (udev, dbus, seatd)" "apk add eudev dbus seatd font-dejavu" "Ensure the main repositories are accessible."
+run_step "Install ACPI daemon (battery, power events)" "apk add acpid" "acpid provides battery info for Waybar and handles power button events."
 run_step "Install Window Manager (sway, swaybg, xwayland)" "apk add sway swaybg xwayland wl-clipboard" "Ensure community repositories are enabled."
 
 # --- 5. Install Terminal ---
@@ -293,8 +294,8 @@ EOF
 }
 run_step "Setup auto-start on tty1 for all users and seat access" "setup_login" "Ensure user home directories are accessible and writable."
 
-# Ensure eudev, dbus, and seatd services are added to startup (required for Wayland on init systems)
-run_step "Add hardware management services to startup" "rc-update add udev sysinit && rc-update add udev-trigger sysinit && rc-update add udev-settle sysinit && rc-update add udev-postmount default && rc-update add dbus default && rc-update add seatd default" "Ensure openrc, eudev, dbus, and seatd are installed correctly."
+# Ensure eudev, dbus, seatd, and acpid services are added to startup
+run_step "Add hardware management services to startup" "rc-update add udev sysinit && rc-update add udev-trigger sysinit && rc-update add udev-settle sysinit && rc-update add udev-postmount default && rc-update add dbus default && rc-update add seatd default && rc-update add acpid default" "Ensure openrc, eudev, dbus, seatd, and acpid are installed correctly."
 
 # --- Finish ---
 echo -e "------------------------------------------------"

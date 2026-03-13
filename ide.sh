@@ -17,7 +17,7 @@ echo -e "${GREEN}Starting Master IDE Installer for Alpine Linux...${NC}\n"
 echo -e "${BLUE}[*] Checking for base setup script (setup.sh)...${NC}"
 if [ ! -f "./setup.sh" ]; then
     echo -e "${YELLOW}>> setup.sh not found locally. Downloading from GitHub...${NC}"
-    if wget -O setup.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/setup.sh; then
+    if wget --show-progress -O setup.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/setup.sh; then
         chmod +x setup.sh
         echo -e "\n${GREEN}[+] Downloaded setup.sh${NC}"
     else
@@ -239,7 +239,7 @@ if [ "$INSTALL_DISTROBOX" = "y" ] || [ "$INSTALL_DISTROBOX" = "Y" ]; then
     echo -e "\n${CYAN}--- Glibc App Installer (VS Code / Antigravity) ---${NC}"
     if [ ! -f "./dbox.sh" ]; then
         echo -e "${YELLOW}>> Downloading dbox.sh from GitHub...${NC}"
-        if wget -O dbox.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/dbox.sh; then
+        if wget --show-progress -O dbox.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/dbox.sh; then
             chmod +x dbox.sh
             echo -e "${GREEN}[+] Downloaded successfully.${NC}\n"
         else
