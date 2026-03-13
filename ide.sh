@@ -254,3 +254,11 @@ fi
 
 echo -e "\n${GREEN}[SUCCESS] IDE Installation Phase Completed!${NC}"
 echo -e "You can now log into tty1 to start your Sway environment."
+
+read -p "$(echo -e ${YELLOW}"Delete setup scripts (ide.sh, setup.sh, dbox.sh) from this machine? [y/N]: "${NC})" DELETE_SCRIPTS
+if [ "$DELETE_SCRIPTS" = "y" ] || [ "$DELETE_SCRIPTS" = "Y" ]; then
+    rm -f "$0" ./setup.sh ./dbox.sh
+    echo -e "${GREEN}[+] Scripts deleted.${NC}"
+else
+    echo -e "${BLUE}[*] Scripts kept at:${NC} $(realpath "$0" 2>/dev/null || readlink -f "$0")"
+fi
