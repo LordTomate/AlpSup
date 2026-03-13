@@ -244,7 +244,7 @@ if [ "$INSTALL_DISTROBOX" = "y" ] || [ "$INSTALL_DISTROBOX" = "Y" ]; then
             echo -e "${GREEN}[+] Downloaded successfully.${NC}\n"
         else
             echo -e "${RED}[!] ERROR:${NC} Could not download dbox.sh. Check your internet connection."
-            echo -e "${YELLOW}[TIP]${NC} Re-run later: wget https://raw.githubusercontent.com/LordTomate/AlpSup/main/dbox.sh && sh dbox.sh"
+            echo -e "${YELLOW}[TIP]${NC} Re-run later: wget -O dbox.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/dbox.sh && sh dbox.sh"
         fi
     fi
     if [ -f "./dbox.sh" ]; then
