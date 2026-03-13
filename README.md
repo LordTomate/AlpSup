@@ -11,8 +11,45 @@ This repository contains an automated setup script (`setup.sh`) to quickly boots
 - **Editor:** neovim
 - **PDF Viewer:** zathura
 - **Media:** cmus
-- **System Services:** nftables (Firewall), dnscrypt-proxy (DNS proxy)
+- **System Services:** nftables (Firewall), dnscrypt-proxy (DNS proxy), acpid (ACPI events)
 - **Login:** tty1 auto-start (No Display Manager)
+
+---
+
+## Resource Usage (Approximate)
+
+> Values are estimates based on Alpine package sizes and typical idle RSS. Actual numbers vary with hardware and usage.
+
+### Base Stack (`setup.sh`)
+
+| Component | Disk | Idle RAM |
+|---|---|---|
+| Alpine base | ~150 MB | ~15 MB |
+| Sway + Wayland stack | ~60 MB | ~30 MB |
+| foot (terminal) | ~5 MB | ~15 MB |
+| LibreWolf (browser) | ~180 MB | ~250–500 MB |
+| neovim + zathura + cmus | ~35 MB | ~15 MB |
+| nftables + dnscrypt-proxy + acpid | ~10 MB | ~20 MB |
+| **Total (base, Sway idle)** | **~450 MB** | **~80 MB** |
+| **Total (LibreWolf open)** | —  | **~380 MB** |
+
+### Optional Tools (`ide.sh` menu)
+
+| Option | Tool | Extra Disk | Extra RAM |
+|---|---|---|---|
+| [1] | Zed Editor | ~100 MB | ~150 MB |
+| [2] | Code OSS | ~300 MB | ~350 MB |
+| [3] | cliphist | ~2 MB | ~5 MB |
+| [4] | grim + slurp | ~2 MB | negligible |
+| [5] | brightnessctl + alsa-utils | ~5 MB | ~2 MB |
+| [6] | mako | ~2 MB | ~5 MB |
+| [7] | waybar | ~10 MB | ~15 MB |
+| [8] | swaylock + swayidle | ~3 MB | ~5 MB |
+| [9] | Podman + Distrobox | ~80 MB | ~30 MB |
+| [9]+VS Code | Ubuntu container + VS Code | +1.5 GB | ~400 MB |
+| [9]+Antigravity | Ubuntu container + Antigravity | +1.5 GB | ~300 MB |
+
+---
 
 ## Prerequisites
 
