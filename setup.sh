@@ -20,10 +20,6 @@ echo -e "(This deletes existing sway, foot, ranger, nvim, zathura, cmus, and pro
 read -p "$(echo -e ${BLUE}"Wipe configurations? [y/N]: "${NC})" WIPE_CONFIGS
 WIPE_CONFIGS=${WIPE_CONFIGS:-N}
 
-echo -e "${YELLOW}--- Self-Destruct Option ---${NC}"
-read -p "$(echo -e ${BLUE}"Delete this setup script automatically after a successful run? [y/N]: "${NC})" DELETE_SCRIPT
-DELETE_SCRIPT=${DELETE_SCRIPT:-N}
-echo -e ""
 
 if [ "$WIPE_CONFIGS" = "y" ] || [ "$WIPE_CONFIGS" = "Y" ]; then
     echo -ne "${BLUE}[*] Executing:${NC} Deep Wiping old applications and configurations... "
@@ -307,10 +303,3 @@ echo -e "   -> ${YELLOW}To close LibreWolf (or any window):${NC} Press ${GREEN}M
 echo -e "   -> ${YELLOW}To open a terminal (foot):${NC} Press ${GREEN}Mod + Enter${NC}."
 echo -e "   -> ${YELLOW}To launch LibreWolf manually again:${NC} Press Mod+Enter, type 'librewolf', and press Enter."
 echo -e "   *(Note: The 'Mod' key is your Super/Windows/Command key).* "
-
-if [ "$DELETE_SCRIPT" = "y" ] || [ "$DELETE_SCRIPT" = "Y" ]; then
-    echo -e "3. ${BLUE}Cleanup:${NC} The setup script has been deleted."
-    rm -f "$0"
-else
-    echo -e "3. ${BLUE}File Locations:${NC} Your setup script is saved at: $(realpath "$0" 2>/dev/null || readlink -f "$0")"
-fi
