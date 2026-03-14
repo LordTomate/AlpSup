@@ -20,10 +20,6 @@ echo -e "(This deletes existing sway, foot, ranger, nvim, zathura, cmus, and pro
 read -p "$(echo -e ${BLUE}"Wipe configurations? [y/N]: "${NC})" WIPE_CONFIGS
 WIPE_CONFIGS=${WIPE_CONFIGS:-N}
 
-echo -e "${YELLOW}--- Self-Destruct Option ---${NC}"
-read -p "$(echo -e ${BLUE}"Delete this setup script automatically after a successful run? [y/N]: "${NC})" DELETE_SCRIPT
-DELETE_SCRIPT=${DELETE_SCRIPT:-N}
-echo -e ""
 
 if [ "$WIPE_CONFIGS" = "y" ] || [ "$WIPE_CONFIGS" = "Y" ]; then
     echo -ne "${BLUE}[*] Executing:${NC} Deep Wiping old applications and configurations... "
@@ -140,6 +136,7 @@ run_step "Upgrade existing packages" "apk upgrade" "Check your network connectio
 
 # --- 4. Install Wayland, Window Manager, and Base ---
 run_step "Install core services (udev, dbus, seatd)" "apk add eudev dbus seatd font-dejavu" "Ensure the main repositories are accessible."
+run_step "Install ACPI daemon (battery, power events)" "apk add acpid" "acpid provides battery info for Waybar and handles power button events."
 run_step "Install Window Manager (sway, swaybg, xwayland)" "apk add sway swaybg xwayland wl-clipboard" "Ensure community repositories are enabled."
 
 # --- 5. Install Terminal ---
@@ -293,8 +290,8 @@ EOF
 }
 run_step "Setup auto-start on tty1 for all users and seat access" "setup_login" "Ensure user home directories are accessible and writable."
 
-# Ensure eudev, dbus, and seatd services are added to startup (required for Wayland on init systems)
-run_step "Add hardware management services to startup" "rc-update add udev sysinit && rc-update add udev-trigger sysinit && rc-update add udev-settle sysinit && rc-update add udev-postmount default && rc-update add dbus default && rc-update add seatd default" "Ensure openrc, eudev, dbus, and seatd are installed correctly."
+# Ensure eudev, dbus, seatd, and acpid services are added to startup
+run_step "Add hardware management services to startup" "rc-update add udev sysinit && rc-update add udev-trigger sysinit && rc-update add udev-settle sysinit && rc-update add udev-postmount default && rc-update add dbus default && rc-update add seatd default && rc-update add acpid default" "Ensure openrc, eudev, dbus, seatd, and acpid are installed correctly."
 
 # --- Finish ---
 echo -e "------------------------------------------------"
@@ -306,10 +303,3 @@ echo -e "   -> ${YELLOW}To close LibreWolf (or any window):${NC} Press ${GREEN}M
 echo -e "   -> ${YELLOW}To open a terminal (foot):${NC} Press ${GREEN}Mod + Enter${NC}."
 echo -e "   -> ${YELLOW}To launch LibreWolf manually again:${NC} Press Mod+Enter, type 'librewolf', and press Enter."
 echo -e "   *(Note: The 'Mod' key is your Super/Windows/Command key).* "
-
-if [ "$DELETE_SCRIPT" = "y" ] || [ "$DELETE_SCRIPT" = "Y" ]; then
-    echo -e "3. ${BLUE}Cleanup:${NC} The setup script has been deleted."
-    rm -f "$0"
-else
-    echo -e "3. ${BLUE}File Locations:${NC} Your setup script is saved at: $(realpath "$0" 2>/dev/null || readlink -f "$0")"
-fi
