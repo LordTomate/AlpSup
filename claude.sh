@@ -196,3 +196,7 @@ echo -e "------------------------------------------------"
 echo -e "${GREEN}[SUCCESS] Headless Alpine Setup Completed!${NC}"
 echo -e "Your system is now hardened, running nftables, sshguard, and configured for a tmux/zsh/neovim workflow."
 echo -e "Please read GuiLess.md for instructions and keybindings."
+
+rm -f "$0"
+
+rm -f "$0"
