@@ -17,7 +17,7 @@ echo -e "${GREEN}Starting Master IDE Installer for Alpine Linux...${NC}\n"
 echo -e "${BLUE}[*] Checking for base setup script (setup.sh)...${NC}"
 if [ ! -f "./setup.sh" ]; then
     echo -e "${YELLOW}>> setup.sh not found locally. Downloading from GitHub...${NC}"
-    if wget --show-progress -O setup.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/setup.sh; then
+    if wget --timeout=15 --tries=3 --waitretry=2 --show-progress -O setup.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/setup.sh; then
         chmod +x setup.sh
         echo -e "\n${GREEN}[+] Downloaded setup.sh${NC}"
     else
@@ -143,9 +143,13 @@ fi
 
 inject_sway_config() {
     local config_text="$1"
+    local identifier_line=$(echo "$config_text" | head -n 2 | grep -v "^$" | head -n 1)
+
     for d in /root /home/*; do
         if [ -w "$d/.config/sway/config" ]; then
-            echo "$config_text" >> "$d/.config/sway/config"
+            if ! grep -qF "$identifier_line" "$d/.config/sway/config" 2>/dev/null; then
+                echo "$config_text" >> "$d/.config/sway/config"
+            fi
         fi
     done
 }
@@ -239,12 +243,12 @@ if [ "$INSTALL_DISTROBOX" = "y" ] || [ "$INSTALL_DISTROBOX" = "Y" ]; then
     echo -e "\n${CYAN}--- Glibc App Installer (VS Code / Antigravity) ---${NC}"
     if [ ! -f "./dbox.sh" ]; then
         echo -e "${YELLOW}>> Downloading dbox.sh from GitHub...${NC}"
-        if wget --show-progress -O dbox.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/dbox.sh; then
+        if wget --timeout=15 --tries=3 --waitretry=2 --show-progress -O dbox.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/dbox.sh; then
             chmod +x dbox.sh
             echo -e "${GREEN}[+] Downloaded successfully.${NC}\n"
         else
             echo -e "${RED}[!] ERROR:${NC} Could not download dbox.sh. Check your internet connection."
-            echo -e "${YELLOW}[TIP]${NC} Re-run later: wget -O dbox.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/dbox.sh && sh dbox.sh"
+            echo -e "${YELLOW}[TIP]${NC} Re-run later: wget --timeout=15 --tries=3 -O dbox.sh https://raw.githubusercontent.com/LordTomate/AlpSup/main/dbox.sh && sh dbox.sh"
         fi
     fi
     if [ -f "./dbox.sh" ]; then

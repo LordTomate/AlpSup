@@ -70,9 +70,10 @@ if [ -f /etc/conf.d/loadkmap ]; then
     echo -e "${GREEN}[+] Detected Keyboard Layout:${NC} $KB_LAYOUT"
     [ -n "$KB_VARIANT" ] && echo -e "${GREEN}[+] Detected Variant:${NC} $KB_VARIANT"
 else
-    echo -e "${YELLOW}[!] Warning:${NC} Could not find /etc/conf.d/loadkmap. Falling back to 'us'."
-    KB_LAYOUT="us"
-    KB_VARIANT=""
+    echo -e "${YELLOW}[!] Warning:${NC} Could not find /etc/conf.d/loadkmap."
+    read -p "$(echo -e ${BLUE}"Please enter your keyboard layout (e.g., us, de, fr, gb) [us]: "${NC})" KB_LAYOUT
+    KB_LAYOUT=${KB_LAYOUT:-us}
+    read -p "$(echo -e ${BLUE}"Please enter your keyboard variant (e.g., mac, dvorak) or press Enter to skip: "${NC})" KB_VARIANT
 fi
 echo -e ""
 
@@ -269,7 +270,7 @@ EOF
 
             # 2. Auto-start sway on login on tty1
             cat << 'EOF' > "$dir/.profile"
-if [ -z "${DISPLAY}" ] && [ -n "${XDG_VTNR}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
+if [ -z "${DISPLAY}" ] && [ "$(tty)" = "/dev/tty1" ]; then
   exec sway
 fi
 EOF
@@ -287,6 +288,10 @@ EOF
         fi
     done
     adduser root seat || true
+    if [ -n "$SUDO_USER" ]; then
+        adduser "$SUDO_USER" seat || true
+        adduser "$SUDO_USER" video || true
+    fi
 }
 run_step "Setup auto-start on tty1 for all users and seat access" "setup_login" "Ensure user home directories are accessible and writable."
 

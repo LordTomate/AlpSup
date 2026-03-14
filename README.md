@@ -46,8 +46,8 @@ This repository contains an automated setup script (`setup.sh`) to quickly boots
 | [7] | waybar | ~10 MB | ~15 MB |
 | [8] | swaylock + swayidle | ~3 MB | ~5 MB |
 | [9] | Podman + Distrobox | ~80 MB | ~30 MB |
-| [9]+VS Code | Ubuntu container + VS Code | +1.5 GB | ~400 MB |
-| [9]+Antigravity | Ubuntu container + Antigravity | +1.5 GB | ~300 MB |
+| [9]+VS Code | Debian container + VS Code | +1.5 GB | ~400 MB |
+| [9]+Antigravity | Debian container + Antigravity | +1.5 GB | ~300 MB |
 
 ---
 
@@ -94,14 +94,14 @@ chmod +x ide.sh
 The installer features a **multi-select menu** (Titus-style) where you can enter numbers (e.g., `1,3,4,9`) to batch-install:
 - **IDEs**: Zed, Code OSS.
 - **Power Tools**: `cliphist` (Clipboard), `grim/slurp` (Screenshots), Hardware Key support, `mako` (Notifications), `waybar`, and `swaylock`.
-- **Glibc Compatibility**: Option [9] installs **Distrobox + Podman**, allowing you to run a Debian/Ubuntu container to use glibc-only apps like **Antigravity IDE** or official VS Code natively within your Sway environment.
+- **Glibc Compatibility**: Option [9] installs **Distrobox + Podman**, allowing you to run a Debian container to use glibc-only apps like **Antigravity IDE** or official VS Code natively within your Sway environment.
 
 ---
 
 ## Post-Installation: Running Antigravity/glibc Apps
 If you installed the **Glibc Compatibility Layer** ([9]):
-1. Open a terminal and create your container: `distrobox create --name ubuntu --image ubuntu:latest`
-2. Enter the box: `distrobox enter ubuntu`
+1. Open a terminal and create your container: `distrobox create --name debian-dev --image debian:12`
+2. Enter the box: `distrobox enter debian-dev`
 3. Download/install your `.deb` or binary (like Antigravity) inside. It will automatically share your Sway Wayland socket and look like a native app.
 
 Run it using:
@@ -221,16 +221,16 @@ apk add gcompat libc6-compat
 
 ## Using Distrobox Containers (option [9])
 
-Distrobox runs a full Ubuntu container that shares your Wayland display and home folder. Apps installed inside appear as if they are native.
+Distrobox runs a full Debian container that shares your Wayland display and home folder. Apps installed inside appear as if they are native.
 
 ### Managing your container
 
 ```sh
-distrobox enter ubuntu-dev       # Enter the Ubuntu shell
+distrobox enter debian-dev       # Enter the Debian shell
 distrobox list                   # Show all containers
-distrobox stop ubuntu-dev        # Stop the container
-distrobox rm ubuntu-dev          # Delete the container entirely
-distrobox upgrade ubuntu-dev     # Upgrade packages inside
+distrobox stop debian-dev        # Stop the container
+distrobox rm debian-dev          # Delete the container entirely
+distrobox upgrade debian-dev     # Upgrade packages inside
 ```
 
 ### Using VS Code from a container
@@ -238,7 +238,7 @@ distrobox upgrade ubuntu-dev     # Upgrade packages inside
 | Action | Command |
 |---|---|
 | **Launch (from host terminal)** | `code` |
-| **Launch (from inside container)** | `distrobox enter ubuntu-dev -- code` |
+| **Launch (from inside container)** | `distrobox enter debian-dev -- code` |
 | **Close** | `Mod + Shift + q` or `Ctrl + q` |
 
 > VS Code in Distrobox has full access to the official **Microsoft extension marketplace** and Copilot.  
@@ -249,11 +249,11 @@ distrobox upgrade ubuntu-dev     # Upgrade packages inside
 | Action | Command |
 |---|---|
 | **Launch (from host terminal)** | `antigravity` |
-| **Launch (from inside container)** | `distrobox enter ubuntu-dev -- antigravity` |
+| **Launch (from inside container)** | `distrobox enter debian-dev -- antigravity` |
 | **Close** | `Mod + Shift + q` |
 
 ### Container storage & data
 
 - Your **home directory is shared** between Alpine host and the container — files you create inside are accessible outside and vice versa.
-- Container system files (Ubuntu root) live at `~/.local/share/containers/`. Delete the container with `distrobox rm` to reclaim this space (~1.5 GB).
+- Container system files (Debian root) live at `~/.local/share/containers/`. Delete the container with `distrobox rm` to reclaim this space (~1.5 GB).
 - **Network** passes straight through the host — dnscrypt-proxy and nftables apply to container traffic too.

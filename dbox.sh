@@ -13,11 +13,11 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-BOX_NAME="ubuntu-dev"
-BOX_IMAGE="ubuntu:22.04"
+BOX_NAME="debian-dev"
+BOX_IMAGE="debian:12"
 
 echo -e "${GREEN}=== Distrobox Application Installer ===${NC}"
-echo -e "This will create an Ubuntu 22.04 container named '${CYAN}${BOX_NAME}${NC}'."
+echo -e "This will create a Debian 12 container named '${CYAN}${BOX_NAME}${NC}'."
 echo -e "Apps installed inside it will appear seamlessly in your Sway environment.\n"
 
 # --- Check prerequisites ---
@@ -32,7 +32,7 @@ if ! command -v podman >/dev/null 2>&1; then
 fi
 
 # --- App Selection ---
-echo -e "${YELLOW}-- Select Apps to Install inside Ubuntu --${NC}"
+echo -e "${YELLOW}-- Select Apps to Install inside Debian --${NC}"
 echo -e "  [0] None - Set up container only, install apps later"
 echo -e "  [1] VS Code (Official Microsoft build with full marketplace)"
 echo -e "  [2] Antigravity IDE"
@@ -94,7 +94,7 @@ echo -e "\n${BLUE}[*] Checking for existing '${BOX_NAME}' container...${NC}"
 if distrobox list 2>/dev/null | grep -q "$BOX_NAME"; then
     echo -e "${GREEN}[+] Container '${BOX_NAME}' already exists. Reusing it.${NC}"
 else
-    echo -e "${YELLOW}>> Creating Ubuntu 22.04 container. This downloads ~100 MB...${NC}"
+    echo -e "${YELLOW}>> Creating Debian 12 container. This downloads ~50 MB...${NC}"
     distrobox create --name "$BOX_NAME" --image "$BOX_IMAGE" --yes
     echo -e "${GREEN}[+] Container created successfully.${NC}\n"
 fi
@@ -122,7 +122,7 @@ if [ "$INSTALL_VSCODE" = "y" ]; then
 
     run_in_box "Adding Microsoft apt repository" "
         export DEBIAN_FRONTEND=noninteractive
-        wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft.gpg >/dev/null &&
+        wget --timeout=15 --tries=3 --waitretry=2 -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft.gpg >/dev/null &&
         echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main' | sudo tee /etc/apt/sources.list.d/vscode.list &&
         sudo apt-get update -qq"
 
@@ -148,15 +148,12 @@ if [ "$INSTALL_ANTIGRAVITY" = "y" ]; then
     # Download Antigravity .deb directly into the container
     run_in_box "Downloading Antigravity .deb installer" "
         export DEBIAN_FRONTEND=noninteractive
-        # Try official installer – fall back to manual download
-        if curl -fsSL https://antigravity.app/linux-install | sh; then
+        if curl --retry 3 --retry-delay 2 -fsSL https://antigravity.app/linux-install | sh; then
             : # success
         else
-            echo 'Falling back to direct .deb download...' &&
-            DEB_URL=\$(curl -fsSL https://api.github.com/repos/antigravity-ide/antigravity/releases/latest \
-                | grep browser_download_url | grep '.deb' | head -1 | cut -d'\"' -f4) &&
-            [ -n \"\$DEB_URL\" ] && wget -qO /tmp/antigravity.deb \"\$DEB_URL\" &&
-            sudo apt-get install -y /tmp/antigravity.deb
+            echo 'ERROR: Official Antigravity installer failed.' &&
+            echo 'Please check https://antigravity.app for manual .deb installation.' &&
+            exit 1
         fi"
 
     run_in_box "Exporting Antigravity to host (creates desktop entry)" "
@@ -177,7 +174,7 @@ echo -e ""
 echo -e "${YELLOW}Your installed apps are exported to your host environment.${NC}"
 echo -e "They will appear in dmenu and can be launched from any terminal inside Sway.\n"
 echo -e "${CYAN}Useful Distrobox commands:${NC}"
-echo -e "  ${BLUE}distrobox enter ${BOX_NAME}${NC}          - Enter the Ubuntu shell"
+echo -e "  ${BLUE}distrobox enter ${BOX_NAME}${NC}          - Enter the Debian shell"
 echo -e "  ${BLUE}distrobox list${NC}                        - List all containers"
 echo -e "  ${BLUE}distrobox rm ${BOX_NAME}${NC}              - Remove the container"
 echo -e "  ${BLUE}distrobox upgrade ${BOX_NAME}${NC}         - Update software inside the box"
